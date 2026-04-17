@@ -111,6 +111,7 @@ public class RelatorioService {
         BigDecimal totalVendas = somar(posicoes, PosicaoResponse::totalVendas);
         BigDecimal lucroRealizado = somar(posicoes, PosicaoResponse::lucroRealizado);
         BigDecimal totalProventos = somar(posicoes, PosicaoResponse::totalProventos);
+        BigDecimal valorTotal = somar(posicoes, PosicaoResponse::valorAtual);
 
         int fundosComPosicao = (int) posicoes.stream()
             .filter(p -> p.quantidadeCotas() > 0)
@@ -128,6 +129,16 @@ public class RelatorioService {
                 ESCALA_MONETARIA, RoundingMode.HALF_UP)
             : BigDecimal.ZERO;
 
+        BigDecimal variacaoPatrimonial = custoTotal.signum() > 0 && valorTotal.signum() > 0
+            ? valorTotal.subtract(custoTotal).multiply(BigDecimal.valueOf(100))
+                .divide(custoTotal, ESCALA_MONETARIA, RoundingMode.HALF_UP)
+            : null;
+
+        BigDecimal dyCarteira = valorTotal.signum() > 0
+            ? totalProventos.multiply(BigDecimal.valueOf(100))
+                .divide(valorTotal, ESCALA_MONETARIA, RoundingMode.HALF_UP)
+            : null;
+
         return new ResumoCarteiraResponse(
             fundosAtivos.size(),
             fundosComPosicao,
@@ -138,7 +149,10 @@ public class RelatorioService {
             totalProventos.setScale(ESCALA_MONETARIA, RoundingMode.HALF_UP),
             yield,
             mediaMensal,
-            mesesComProventos
+            mesesComProventos,
+            valorTotal.setScale(ESCALA_MONETARIA, RoundingMode.HALF_UP),
+            variacaoPatrimonial,
+            dyCarteira
         );
     }
 

@@ -2,16 +2,20 @@ package com.renlip.fiis.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.renlip.fiis.domain.enums.TipoOperacao;
+import com.renlip.fiis.domain.model.Cotacao;
 import com.renlip.fiis.domain.model.Fundo;
 import com.renlip.fiis.domain.model.Operacao;
 import com.renlip.fiis.domain.model.Provento;
+import com.renlip.fiis.domain.repository.CotacaoRepository;
 import com.renlip.fiis.domain.repository.FundoRepository;
 import com.renlip.fiis.domain.repository.OperacaoRepository;
 import com.renlip.fiis.domain.repository.ProventoRepository;
@@ -24,9 +28,10 @@ import lombok.RequiredArgsConstructor;
 /**
  * Service responsável pelo cálculo da <b>posição consolidada</b> por fundo.
  *
- * <p>Combina dados de {@link Operacao} e {@link Provento} para produzir
- * um resumo com quantidade, preço médio, custo, lucro realizado, proventos
- * recebidos e yield.</p>
+ * <p>Combina dados de {@link Operacao}, {@link Provento} e {@link Cotacao}
+ * para produzir um resumo com quantidade, preço médio, custo, lucro
+ * realizado, proventos recebidos, yield, valor atual de mercado e
+ * rentabilidade total.</p>
  *
  * <p><b>Regra do preço médio (padrão do mercado brasileiro):</b>
  * <ul>
@@ -49,6 +54,7 @@ public class PosicaoService {
     private final FundoRepository fundoRepository;
     private final OperacaoRepository operacaoRepository;
     private final ProventoRepository proventoRepository;
+    private final CotacaoRepository cotacaoRepository;
 
     /**
      * Calcula a posição consolidada de todos os fundos ativos na carteira.
@@ -77,10 +83,6 @@ public class PosicaoService {
 
     /**
      * Executa o cálculo completo da posição de um fundo.
-     *
-     * <p>Percorre as operações em ordem cronológica mantendo
-     * {@code qty}, {@code custoAcumulado} e {@code pm}. As vendas geram
-     * lucro/prejuízo realizado.</p>
      */
     private PosicaoResponse calcularPosicao(Fundo fundo) {
         List<Operacao> operacoes = operacaoRepository.findByFundoIdOrderByDataOperacaoDesc(fundo.getId())
@@ -131,6 +133,22 @@ public class PosicaoService {
                 .divide(custoAtual, ESCALA_MONETARIA, RoundingMode.HALF_UP)
             : BigDecimal.ZERO;
 
+        Optional<Cotacao> ultimaCotacao = cotacaoRepository.findFirstByFundoIdOrderByDataDesc(fundo.getId());
+        BigDecimal precoAtual = ultimaCotacao.map(Cotacao::getPrecoFechamento).orElse(null);
+        LocalDate dataUltimaCotacao = ultimaCotacao.map(Cotacao::getData).orElse(null);
+
+        BigDecimal valorAtual = precoAtual != null
+            ? qty.multiply(precoAtual).setScale(ESCALA_MONETARIA, RoundingMode.HALF_UP)
+            : BigDecimal.ZERO;
+
+        BigDecimal variacao = (precoAtual != null && pm.signum() > 0)
+            ? precoAtual.subtract(pm).multiply(BigDecimal.valueOf(100))
+                .divide(pm, ESCALA_MONETARIA, RoundingMode.HALF_UP)
+            : null;
+
+        BigDecimal rentabilidadeTotal = calcularRentabilidadeTotal(
+            totalCompras, valorAtual, totalVendas, totalProventos);
+
         return new PosicaoResponse(
             FundoResumoResponse.of(fundo),
             qty.intValue(),
@@ -141,8 +159,39 @@ public class PosicaoService {
             lucroRealizado.setScale(ESCALA_MONETARIA, RoundingMode.HALF_UP),
             totalProventos.setScale(ESCALA_MONETARIA, RoundingMode.HALF_UP),
             yieldSobreCusto,
+            precoAtual,
+            dataUltimaCotacao,
+            valorAtual,
+            variacao,
+            rentabilidadeTotal,
             operacoes.size(),
             proventos.size()
         );
+    }
+
+    /**
+     * Rentabilidade total sobre o capital investido no fundo.
+     *
+     * <p>Fórmula: {@code (valorAtual + totalVendas + totalProventos − totalCompras) / totalCompras × 100}.
+     * Representa o retorno considerando:
+     * <ul>
+     *   <li>O valor atual das cotas ainda em carteira;</li>
+     *   <li>O valor bruto recebido em vendas (inclui o principal que voltou);</li>
+     *   <li>Os proventos recebidos;</li>
+     *   <li>Tudo comparado ao total investido em compras.</li>
+     * </ul>
+     * </p>
+     */
+    private BigDecimal calcularRentabilidadeTotal(BigDecimal totalCompras, BigDecimal valorAtual,
+                                                  BigDecimal totalVendas, BigDecimal totalProventos) {
+        if (totalCompras.signum() <= 0) {
+            return null;
+        }
+        BigDecimal retornoTotal = valorAtual
+            .add(totalVendas)
+            .add(totalProventos)
+            .subtract(totalCompras);
+        return retornoTotal.multiply(BigDecimal.valueOf(100))
+            .divide(totalCompras, ESCALA_MONETARIA, RoundingMode.HALF_UP);
     }
 }
