@@ -1,0 +1,18 @@
+{
+    "fundo": { "id": 1, "ticker": "HGLG11", "nome": "CSHG Logística FII" },
+    "quantidadeCotas": 12,
+    "precoMedio": 151.90,
+    "custoAtual": 1822.80,
+    "totalCompras": 2278.50,
+    "totalVendas": 479.70,
+    "lucroRealizado": 24.00,
+    "totalProventos": 13.20,
+    "yieldSobreCustoPercentual": 0.72,
+    "precoAtual": 158.5000,
+    "dataUltimaCotacao": "2026-04-17",
+    "valorAtual": 1902.00,
+    "variacaoPercentual": 4.34,
+    "rentabilidadeTotalPercentual": 5.11,
+    "quantidadeOperacoes": 3,
+    "quantidadeProventos": 1
+}
