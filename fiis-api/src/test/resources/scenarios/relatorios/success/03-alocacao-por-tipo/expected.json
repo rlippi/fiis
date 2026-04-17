@@ -1,0 +1,16 @@
+[
+    {
+        "categoriaCodigo": "TIJOLO",
+        "categoriaDescricao": "Tijolo",
+        "custoAtual": 1822.80,
+        "percentual": 64.57,
+        "quantidadeFundos": 1
+    },
+    {
+        "categoriaCodigo": "PAPEL",
+        "categoriaDescricao": "Papel",
+        "custoAtual": 1000.30,
+        "percentual": 35.43,
+        "quantidadeFundos": 1
+    }
+]
