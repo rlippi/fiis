@@ -1,0 +1,9 @@
+{
+    "status": 400,
+    "erro": "Bad Request",
+    "mensagem": "Erro de validação nos campos enviados",
+    "path": "/api/cotacoes",
+    "detalhes": [
+        "data: Data da cotação não pode ser futura"
+    ]
+}

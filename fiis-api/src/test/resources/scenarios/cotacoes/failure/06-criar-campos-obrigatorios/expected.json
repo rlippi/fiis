@@ -1,0 +1,11 @@
+{
+    "status": 400,
+    "erro": "Bad Request",
+    "mensagem": "Erro de validação nos campos enviados",
+    "path": "/api/cotacoes",
+    "detalhes": [
+        "fundoId: Fundo é obrigatório",
+        "data: Data é obrigatória",
+        "precoFechamento: Preço de fechamento é obrigatório"
+    ]
+}

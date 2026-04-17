@@ -1,0 +1,10 @@
+{
+    "id": 4,
+    "fundo": { "id": 2, "ticker": "MXRF11" },
+    "data": "2026-04-16",
+    "precoFechamento": 10.1500,
+    "precoAbertura": 10.1000,
+    "precoMinimo": 10.0500,
+    "precoMaximo": 10.2000,
+    "volume": 850000.00
+}
