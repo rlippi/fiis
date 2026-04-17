@@ -1,0 +1,12 @@
+{
+    "id": 1,
+    "fundo": { "id": 1, "ticker": "HGLG11", "nome": "CSHG Logística FII" },
+    "tipoProvento": "RENDIMENTO",
+    "tipoProventoDescricao": "Rendimento",
+    "dataReferencia": "2026-02-28",
+    "dataPagamento": "2026-03-15",
+    "valorPorCota": 1.100000,
+    "quantidadeCotas": 10,
+    "valorTotal": 11.00,
+    "observacao": "Rendimento fevereiro"
+}

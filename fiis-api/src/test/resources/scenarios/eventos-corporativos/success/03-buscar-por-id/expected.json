@@ -1,0 +1,9 @@
+{
+    "id": 1,
+    "fundo": { "id": 1, "ticker": "HGLG11", "nome": "CSHG Logística FII" },
+    "tipo": "DESDOBRAMENTO",
+    "tipoDescricao": "Desdobramento",
+    "data": "2026-04-12",
+    "fator": 2.000000,
+    "descricao": "Desdobramento 1:2"
+}

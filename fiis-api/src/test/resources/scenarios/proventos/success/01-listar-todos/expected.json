@@ -1,0 +1,33 @@
+[
+    {
+        "id": 1,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "tipoProvento": "RENDIMENTO",
+        "tipoProventoDescricao": "Rendimento",
+        "dataReferencia": "2026-02-28",
+        "dataPagamento": "2026-03-15",
+        "valorPorCota": 1.100000,
+        "quantidadeCotas": 10,
+        "valorTotal": 11.00
+    },
+    {
+        "id": 2,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "tipoProvento": "RENDIMENTO",
+        "dataReferencia": "2026-03-31",
+        "dataPagamento": "2026-04-15",
+        "valorPorCota": 1.120000,
+        "quantidadeCotas": 12,
+        "valorTotal": 13.44
+    },
+    {
+        "id": 3,
+        "fundo": { "id": 2, "ticker": "MXRF11" },
+        "tipoProvento": "RENDIMENTO",
+        "dataReferencia": "2026-03-31",
+        "dataPagamento": "2026-04-15",
+        "valorPorCota": 0.100000,
+        "quantidadeCotas": 100,
+        "valorTotal": 10.00
+    }
+]

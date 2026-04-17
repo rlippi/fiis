@@ -1,0 +1,14 @@
+{
+    "status": 400,
+    "erro": "Bad Request",
+    "mensagem": "Erro de validação nos campos enviados",
+    "path": "/api/proventos",
+    "detalhes": [
+        "fundoId: Fundo é obrigatório",
+        "tipoProvento: Tipo do provento é obrigatório",
+        "dataReferencia: Data de referência é obrigatória",
+        "dataPagamento: Data de pagamento é obrigatória",
+        "valorPorCota: Valor por cota é obrigatório",
+        "quantidadeCotas: Quantidade de cotas é obrigatória"
+    ]
+}

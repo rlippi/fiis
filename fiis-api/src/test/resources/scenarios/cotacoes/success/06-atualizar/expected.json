@@ -1,0 +1,10 @@
+{
+    "id": 1,
+    "fundo": { "id": 1, "ticker": "HGLG11" },
+    "data": "2026-04-16",
+    "precoFechamento": 158.7500,
+    "precoAbertura": 157.5000,
+    "precoMinimo": 157.0000,
+    "precoMaximo": 159.0000,
+    "volume": 1600000.00
+}

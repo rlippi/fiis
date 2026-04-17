@@ -1,0 +1,29 @@
+[
+    {
+        "id": 3,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "tipo": "VENDA",
+        "dataOperacao": "2026-04-01",
+        "quantidade": 3,
+        "precoUnitario": 160.0000,
+        "valorTotal": 479.70
+    },
+    {
+        "id": 2,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "tipo": "COMPRA",
+        "dataOperacao": "2026-03-20",
+        "quantidade": 5,
+        "precoUnitario": 155.0000,
+        "valorTotal": 775.50
+    },
+    {
+        "id": 1,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "tipo": "COMPRA",
+        "dataOperacao": "2026-03-15",
+        "quantidade": 10,
+        "precoUnitario": 150.2500,
+        "valorTotal": 1503.00
+    }
+]

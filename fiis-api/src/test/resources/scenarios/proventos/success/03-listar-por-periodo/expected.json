@@ -1,0 +1,14 @@
+[
+    {
+        "id": 2,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "dataPagamento": "2026-04-15",
+        "valorTotal": 13.44
+    },
+    {
+        "id": 3,
+        "fundo": { "id": 2, "ticker": "MXRF11" },
+        "dataPagamento": "2026-04-15",
+        "valorTotal": 10.00
+    }
+]

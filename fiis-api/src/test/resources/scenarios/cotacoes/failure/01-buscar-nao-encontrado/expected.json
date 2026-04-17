@@ -1,0 +1,6 @@
+{
+    "status": 404,
+    "erro": "Not Found",
+    "mensagem": "Cotação com ID 999 não encontrada",
+    "path": "/api/cotacoes/999"
+}

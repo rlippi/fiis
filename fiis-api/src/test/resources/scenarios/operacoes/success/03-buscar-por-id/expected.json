@@ -1,0 +1,12 @@
+{
+    "id": 1,
+    "fundo": { "id": 1, "ticker": "HGLG11", "nome": "CSHG Logística FII" },
+    "tipo": "COMPRA",
+    "tipoDescricao": "Compra",
+    "dataOperacao": "2026-03-15",
+    "quantidade": 10,
+    "precoUnitario": 150.2500,
+    "taxas": 0.50,
+    "valorTotal": 1503.00,
+    "observacao": "Primeira compra"
+}

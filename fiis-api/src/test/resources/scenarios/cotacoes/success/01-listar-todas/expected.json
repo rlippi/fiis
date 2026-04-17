@@ -1,0 +1,20 @@
+[
+    {
+        "id": 1,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "data": "2026-04-16",
+        "precoFechamento": 158.0000
+    },
+    {
+        "id": 2,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "data": "2026-04-17",
+        "precoFechamento": 158.5000
+    },
+    {
+        "id": 3,
+        "fundo": { "id": 2, "ticker": "MXRF11" },
+        "data": "2026-04-17",
+        "precoFechamento": 10.2500
+    }
+]

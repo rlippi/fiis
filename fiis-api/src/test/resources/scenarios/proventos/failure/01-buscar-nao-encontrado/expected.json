@@ -1,0 +1,6 @@
+{
+    "status": 404,
+    "erro": "Not Found",
+    "mensagem": "Provento com ID 999 não encontrado",
+    "path": "/api/proventos/999"
+}

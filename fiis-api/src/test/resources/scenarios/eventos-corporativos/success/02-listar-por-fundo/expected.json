@@ -1,0 +1,16 @@
+[
+    {
+        "id": 2,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "tipo": "BONIFICACAO",
+        "data": "2026-04-15",
+        "fator": 0.100000
+    },
+    {
+        "id": 1,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "tipo": "DESDOBRAMENTO",
+        "data": "2026-04-12",
+        "fator": 2.000000
+    }
+]

@@ -1,0 +1,16 @@
+[
+    {
+        "id": 2,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "dataReferencia": "2026-03-31",
+        "valorPorCota": 1.120000,
+        "valorTotal": 13.44
+    },
+    {
+        "id": 1,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "dataReferencia": "2026-02-28",
+        "valorPorCota": 1.100000,
+        "valorTotal": 11.00
+    }
+]

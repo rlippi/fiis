@@ -1,0 +1,8 @@
+{
+    "fundoId": 1,
+    "tipo": "VENDA",
+    "dataOperacao": "2026-04-10",
+    "quantidade": 100,
+    "precoUnitario": 160.00,
+    "taxas": 0.30
+}

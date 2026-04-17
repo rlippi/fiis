@@ -1,0 +1,8 @@
+{
+    "fundoId": 1,
+    "tipo": "COMPRA",
+    "dataOperacao": "2099-01-01",
+    "quantidade": 10,
+    "precoUnitario": 150.00,
+    "taxas": 0.50
+}
