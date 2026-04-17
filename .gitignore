@@ -1,0 +1,106 @@
+# ==============================================
+# Java / Maven (Backend)
+# ==============================================
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# Maven Wrapper - mantém o wrapper mas ignora o jar baixado
+.mvn/wrapper/maven-wrapper.jar
+
+# ==============================================
+# Node / Angular (Frontend - futuro)
+# ==============================================
+node_modules/
+dist/
+tmp/
+out-tsc/
+bazel-out/
+.angular/cache/
+.sass-cache/
+connect.lock
+coverage/
+libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+typings/
+
+# ==============================================
+# IDEs
+# ==============================================
+# IntelliJ / STS4 / Eclipse
+.idea/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+.factorypath
+.springBeans
+.sts4-cache/
+.apt_generated/
+
+# VS Code - mantém settings compartilhados, ignora locais
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# NetBeans
+nbproject/private/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# ==============================================
+# Sistema Operacional
+# ==============================================
+# Windows
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.fuse_hidden*
+
+# ==============================================
+# Logs e arquivos temporários
+# ==============================================
+*.log
+logs/
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# ==============================================
+# Variáveis de ambiente e configs locais
+# ==============================================
+.env
+.env.local
+.env.*.local
+application-local.yml
+application-local.properties
+
+# ==============================================
+# Dados locais / Docker volumes montados
+# ==============================================
+data/
+*.sqlite
+*.db

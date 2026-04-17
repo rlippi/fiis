@@ -1,0 +1,23 @@
+# ===========================================
+# AMBIENTE: DEV (local)
+# ===========================================
+# Conecta no PostgreSQL rodando localmente via Docker.
+# Para subir o banco: docker start fiis-postgres
+# Para verificar:     docker ps
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/fiis
+    username: renlip
+    password: fiis123
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      # "update" cria/atualiza tabelas automaticamente com base nas entidades
+      ddl-auto: update
+    show-sql: true
+
+logging:
+  level:
+    com.renlip.fiis: DEBUG

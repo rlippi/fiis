@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: fiis-api
+
+  # Profile ativo padrão: dev
+  # Para trocar, use: -Dspring.profiles.active=hml (ou prod)
+  profiles:
+    active: dev
+
+  # JPA / Hibernate - configurações comuns a todos os ambientes
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+# Porta da API
+server:
+  port: 8081

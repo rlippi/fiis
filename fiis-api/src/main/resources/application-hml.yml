@@ -1,0 +1,22 @@
+# ===========================================
+# AMBIENTE: HOMOLOGAÇÃO (nuvem)
+# ===========================================
+# Conecta no PostgreSQL do Supabase (projeto de homologação).
+# As credenciais serão configuradas como variáveis de ambiente no Render.
+
+spring:
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      # "update" ainda é seguro em homologação
+      ddl-auto: update
+    show-sql: true
+
+logging:
+  level:
+    com.renlip.fiis: DEBUG

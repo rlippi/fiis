@@ -1,0 +1,23 @@
+# ===========================================
+# AMBIENTE: PRODUÇÃO (nuvem)
+# ===========================================
+# Conecta no PostgreSQL do Supabase (projeto de produção).
+# As credenciais serão configuradas como variáveis de ambiente no Render.
+
+spring:
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      # "validate" em produção: NÃO altera o banco, apenas valida
+      # Mudanças de schema serão feitas via migrations (Flyway)
+      ddl-auto: validate
+    show-sql: false
+
+logging:
+  level:
+    com.renlip.fiis: INFO
