@@ -1,0 +1,11 @@
+{
+    "id": 4,
+    "ticker": "HGBS11",
+    "nome": "Hedge Brasil Shopping FII",
+    "cnpj": "08431747000106",
+    "tipo": "TIJOLO",
+    "tipoDescricao": "Tijolo",
+    "segmento": "SHOPPING",
+    "segmentoDescricao": "Shopping",
+    "ativo": true
+}

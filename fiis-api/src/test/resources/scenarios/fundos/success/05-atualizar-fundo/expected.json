@@ -1,0 +1,11 @@
+{
+    "id": 1,
+    "ticker": "HGLG11",
+    "nome": "CSHG Logística FII (Atualizado)",
+    "cnpj": "11728688000147",
+    "tipo": "TIJOLO",
+    "tipoDescricao": "Tijolo",
+    "segmento": "LOGISTICA",
+    "segmentoDescricao": "Logística",
+    "ativo": true
+}

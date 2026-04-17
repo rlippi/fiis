@@ -104,3 +104,8 @@ application-local.properties
 data/
 *.sqlite
 *.db
+
+# ==============================================
+# Pastas locais de referência (não versionar)
+# ==============================================
+exemplo/
