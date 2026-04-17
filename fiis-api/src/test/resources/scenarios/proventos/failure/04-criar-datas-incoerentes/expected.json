@@ -1,0 +1,6 @@
+{
+    "status": 409,
+    "erro": "Conflict",
+    "mensagem": "Data de pagamento (2026-03-15) não pode ser anterior à data de referência (2026-03-31)",
+    "path": "/api/proventos"
+}

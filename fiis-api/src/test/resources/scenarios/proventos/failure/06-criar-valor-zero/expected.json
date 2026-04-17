@@ -1,0 +1,9 @@
+{
+    "status": 400,
+    "erro": "Bad Request",
+    "mensagem": "Erro de validação nos campos enviados",
+    "path": "/api/proventos",
+    "detalhes": [
+        "valorPorCota: Valor por cota deve ser maior que zero"
+    ]
+}

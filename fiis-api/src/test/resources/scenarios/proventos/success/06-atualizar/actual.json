@@ -1,0 +1,9 @@
+{
+    "fundoId": 1,
+    "tipoProvento": "RENDIMENTO",
+    "dataReferencia": "2026-02-28",
+    "dataPagamento": "2026-03-15",
+    "valorPorCota": 1.15,
+    "quantidadeCotas": 10,
+    "observacao": "Rendimento fevereiro (retificado)"
+}

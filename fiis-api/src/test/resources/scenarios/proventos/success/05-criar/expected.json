@@ -1,0 +1,12 @@
+{
+    "id": 4,
+    "fundo": { "id": 1, "ticker": "HGLG11" },
+    "tipoProvento": "RENDIMENTO",
+    "tipoProventoDescricao": "Rendimento",
+    "dataReferencia": "2026-01-31",
+    "dataPagamento": "2026-02-15",
+    "valorPorCota": 1.050000,
+    "quantidadeCotas": 10,
+    "valorTotal": 10.50,
+    "observacao": "Rendimento janeiro"
+}
