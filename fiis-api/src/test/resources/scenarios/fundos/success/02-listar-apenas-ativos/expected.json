@@ -1,0 +1,18 @@
+[
+    {
+        "id": 1,
+        "ticker": "HGLG11",
+        "nome": "CSHG Logística FII",
+        "tipo": "TIJOLO",
+        "segmento": "LOGISTICA",
+        "ativo": true
+    },
+    {
+        "id": 2,
+        "ticker": "MXRF11",
+        "nome": "Maxi Renda FII",
+        "tipo": "PAPEL",
+        "segmento": "RECEBIVEIS",
+        "ativo": true
+    }
+]

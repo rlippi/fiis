@@ -1,0 +1,6 @@
+{
+    "status": 409,
+    "erro": "Conflict",
+    "mensagem": "Já existe um fundo cadastrado com o ticker HGLG11",
+    "path": "/api/fundos/2"
+}
