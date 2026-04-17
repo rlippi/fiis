@@ -10,16 +10,19 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * <p>Serve de ponto de partida do dashboard — mostra a "foto" da carteira
  * numa única chamada.</p>
  *
- * @param quantidadeFundosAtivos    quantidade de fundos ativos
- * @param quantidadeFundosComPosicao fundos que ainda têm cotas em carteira
- * @param custoTotalCarteira        soma do custo atual de todas as posições (R$)
- * @param totalInvestidoHistorico   soma de todas as compras já realizadas (R$)
- * @param totalVendasHistorico      soma de todas as vendas já realizadas (R$)
- * @param lucroRealizadoTotal       lucro/prejuízo total realizado em vendas (R$)
- * @param totalProventosRecebidos   soma total de proventos recebidos (R$)
- * @param yieldCarteiraPercentual   yield sobre o custo atual da carteira (%)
- * @param mediaProventosMensal      média mensal de proventos recebidos (R$)
- * @param mesesComProventos         número de meses em que houve recebimento
+ * @param quantidadeFundosAtivos         quantidade de fundos ativos
+ * @param quantidadeFundosComPosicao     fundos que ainda têm cotas em carteira
+ * @param custoTotalCarteira             soma do custo atual de todas as posições (R$)
+ * @param totalInvestidoHistorico        soma de todas as compras já realizadas (R$)
+ * @param totalVendasHistorico           soma de todas as vendas já realizadas (R$)
+ * @param lucroRealizadoTotal            lucro/prejuízo total realizado em vendas (R$)
+ * @param totalProventosRecebidos        soma total de proventos recebidos (R$)
+ * @param yieldCarteiraPercentual        yield sobre o custo atual da carteira (%)
+ * @param mediaProventosMensal           média mensal de proventos recebidos (R$)
+ * @param mesesComProventos              número de meses em que houve recebimento
+ * @param valorTotalCarteira             valor atual de mercado da carteira (R$)
+ * @param variacaoPatrimonialPercentual  (valor atual − custo atual) / custo atual × 100
+ * @param dyCarteiraPercentual           proventos / valor atual de mercado × 100
  */
 @Schema(description = "Resumo geral da carteira")
 public record ResumoCarteiraResponse(
@@ -52,6 +55,15 @@ public record ResumoCarteiraResponse(
     BigDecimal mediaProventosMensal,
 
     @Schema(description = "Quantidade de meses com recebimento", example = "1")
-    Integer mesesComProventos
+    Integer mesesComProventos,
+
+    @Schema(description = "Valor atual da carteira (R$)", example = "1902.00")
+    BigDecimal valorTotalCarteira,
+
+    @Schema(description = "Variação patrimonial (%) — (valor atual − custo) / custo × 100", example = "4.35")
+    BigDecimal variacaoPatrimonialPercentual,
+
+    @Schema(description = "Dividend Yield da carteira (%) — proventos / valor atual × 100", example = "1.22")
+    BigDecimal dyCarteiraPercentual
 
 ) {}
