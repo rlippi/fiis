@@ -14,6 +14,12 @@ spring:
       hibernate:
         format_sql: true
 
+  # MessageSource - mensagens da API resolvidas por chave em messages_pt_BR.properties
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
 # Porta da API
 server:
   port: 8081

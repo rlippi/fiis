@@ -1,5 +1,9 @@
 package com.renlip.fiis.exception;
 
+import com.renlip.fiis.domain.enumeration.MensagemEnum;
+
+import lombok.Getter;
+
 /**
  * Lançada quando uma regra de negócio é violada.
  *
@@ -7,15 +11,16 @@ package com.renlip.fiis.exception;
  *
  * <p>Ex: tentar cadastrar um Fundo com ticker que já existe.</p>
  */
+@Getter
 public class RegraNegocioException extends RuntimeException {
 
-    /**
-     * Cria uma exceção com a mensagem informada.
-     *
-     * @param mensagem descrição da regra violada
-     *                 (ex: "Já existe um fundo cadastrado com o ticker HGLG11")
-     */
-    public RegraNegocioException(String mensagem) {
-        super(mensagem);
+    private final MensagemEnum mensagem;
+
+    private final Object[] args;
+
+    public RegraNegocioException(final MensagemEnum mensagem, final Object... args) {
+        super(mensagem.getTexto());
+        this.mensagem = mensagem;
+        this.args = args;
     }
 }

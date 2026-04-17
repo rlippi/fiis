@@ -14,15 +14,18 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.renlip.fiis.domain.model.Fundo;
-import com.renlip.fiis.domain.repository.FundoRepository;
-import com.renlip.fiis.domain.repository.ProventoRepository;
-import com.renlip.fiis.dto.AlocacaoResponse;
-import com.renlip.fiis.dto.FundoResumoResponse;
-import com.renlip.fiis.dto.PosicaoResponse;
-import com.renlip.fiis.dto.RendaMensalResponse;
-import com.renlip.fiis.dto.RendaPorFundoResponse;
-import com.renlip.fiis.dto.ResumoCarteiraResponse;
+import com.renlip.fiis.domain.dto.AlocacaoResponse;
+import com.renlip.fiis.domain.dto.FundoResumoResponse;
+import com.renlip.fiis.domain.dto.PosicaoResponse;
+import com.renlip.fiis.domain.dto.RendaMensalResponse;
+import com.renlip.fiis.domain.dto.RendaPorFundoResponse;
+import com.renlip.fiis.domain.dto.ResumoCarteiraResponse;
+import com.renlip.fiis.domain.entity.Fundo;
+import com.renlip.fiis.domain.mapper.FundoResumoMapper;
+import com.renlip.fiis.repository.FundoRepository;
+import com.renlip.fiis.repository.ProventoRepository;
+
+import static com.renlip.fiis.constant.EscalaConstants.ESCALA_MONETARIA;
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,11 +41,11 @@ import lombok.RequiredArgsConstructor;
 public class RelatorioService {
 
     private static final Locale PT_BR = Locale.of("pt", "BR");
-    private static final int ESCALA_MONETARIA = 2;
 
     private final ProventoRepository proventoRepository;
     private final FundoRepository fundoRepository;
     private final PosicaoService posicaoService;
+    private final FundoResumoMapper fundoResumoMapper;
 
     /**
      * Retorna a renda passiva consolidada por mês de pagamento.
@@ -83,7 +86,7 @@ public class RelatorioService {
                     .setScale(ESCALA_MONETARIA, RoundingMode.HALF_UP);
                 Integer quantidade = ((Number) linha[2]).intValue();
                 return new RendaPorFundoResponse(
-                    FundoResumoResponse.of(fundosPorId.get(fundoId)),
+                    fundoResumoMapper.toResponse(fundosPorId.get(fundoId)),
                     total,
                     quantidade
                 );
@@ -167,7 +170,7 @@ public class RelatorioService {
     }
 
     /**
-     * Retorna a alocação da carteira por {@link com.renlip.fiis.domain.enums.TipoFundo}.
+     * Retorna a alocação da carteira por {@link com.renlip.fiis.domain.enumeration.TipoFundo}.
      *
      * @return lista de alocações, ordenada do maior custo ao menor
      */
@@ -179,7 +182,7 @@ public class RelatorioService {
     }
 
     /**
-     * Retorna a alocação da carteira por {@link com.renlip.fiis.domain.enums.Segmento}.
+     * Retorna a alocação da carteira por {@link com.renlip.fiis.domain.enumeration.Segmento}.
      *
      * @return lista de alocações, ordenada do maior custo ao menor
      */

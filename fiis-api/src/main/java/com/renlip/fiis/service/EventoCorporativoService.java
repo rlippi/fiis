@@ -5,13 +5,15 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.renlip.fiis.domain.model.EventoCorporativo;
-import com.renlip.fiis.domain.model.Fundo;
-import com.renlip.fiis.domain.repository.EventoCorporativoRepository;
-import com.renlip.fiis.domain.repository.FundoRepository;
-import com.renlip.fiis.dto.EventoCorporativoResponse;
+import com.renlip.fiis.domain.dto.EventoCorporativoResponse;
+import com.renlip.fiis.domain.entity.EventoCorporativo;
+import com.renlip.fiis.domain.entity.Fundo;
+import com.renlip.fiis.domain.enumeration.MensagemEnum;
+import com.renlip.fiis.domain.mapper.EventoCorporativoMapper;
+import com.renlip.fiis.domain.vo.EventoCorporativoRequest;
 import com.renlip.fiis.exception.RecursoNaoEncontradoException;
-import com.renlip.fiis.vo.EventoCorporativoRequest;
+import com.renlip.fiis.repository.EventoCorporativoRepository;
+import com.renlip.fiis.repository.FundoRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -35,6 +37,7 @@ public class EventoCorporativoService {
 
     private final EventoCorporativoRepository eventoRepository;
     private final FundoRepository fundoRepository;
+    private final EventoCorporativoMapper eventoMapper;
 
     /**
      * Lista todos os eventos corporativos cadastrados.
@@ -42,9 +45,7 @@ public class EventoCorporativoService {
      * @return lista completa
      */
     public List<EventoCorporativoResponse> listarTodos() {
-        return eventoRepository.findAll().stream()
-            .map(EventoCorporativoResponse::of)
-            .toList();
+        return eventoMapper.toResponseList(eventoRepository.findAll());
     }
 
     /**
@@ -56,9 +57,7 @@ public class EventoCorporativoService {
      */
     public List<EventoCorporativoResponse> listarPorFundo(Long fundoId) {
         validarFundoExiste(fundoId);
-        return eventoRepository.findByFundoIdOrderByDataDesc(fundoId).stream()
-            .map(EventoCorporativoResponse::of)
-            .toList();
+        return eventoMapper.toResponseList(eventoRepository.findByFundoIdOrderByDataDesc(fundoId));
     }
 
     /**
@@ -69,7 +68,7 @@ public class EventoCorporativoService {
      * @throws RecursoNaoEncontradoException se não existir
      */
     public EventoCorporativoResponse buscarPorId(Long id) {
-        return EventoCorporativoResponse.of(obterEntidade(id));
+        return eventoMapper.toResponse(obterEntidade(id));
     }
 
     /**
@@ -92,7 +91,7 @@ public class EventoCorporativoService {
             .build();
 
         EventoCorporativo salvo = eventoRepository.save(evento);
-        return EventoCorporativoResponse.of(salvo);
+        return eventoMapper.toResponse(salvo);
     }
 
     /**
@@ -115,7 +114,7 @@ public class EventoCorporativoService {
         evento.setDescricao(request.descricao());
 
         EventoCorporativo atualizado = eventoRepository.save(evento);
-        return EventoCorporativoResponse.of(atualizado);
+        return eventoMapper.toResponse(atualizado);
     }
 
     /**
@@ -132,20 +131,17 @@ public class EventoCorporativoService {
 
     private EventoCorporativo obterEntidade(Long id) {
         return eventoRepository.findById(id)
-            .orElseThrow(() -> new RecursoNaoEncontradoException(
-                "Evento corporativo com ID " + id + " não encontrado"));
+            .orElseThrow(() -> new RecursoNaoEncontradoException(MensagemEnum.EVENTO_CORPORATIVO_NAO_ENCONTRADO, id));
     }
 
     private Fundo obterFundo(Long fundoId) {
         return fundoRepository.findById(fundoId)
-            .orElseThrow(() -> new RecursoNaoEncontradoException(
-                "Fundo com ID " + fundoId + " não encontrado"));
+            .orElseThrow(() -> new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId));
     }
 
     private void validarFundoExiste(Long fundoId) {
         if (!fundoRepository.existsById(fundoId)) {
-            throw new RecursoNaoEncontradoException(
-                "Fundo com ID " + fundoId + " não encontrado");
+            throw new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId);
         }
     }
 }

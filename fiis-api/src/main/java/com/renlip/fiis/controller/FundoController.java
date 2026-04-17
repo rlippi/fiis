@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.renlip.fiis.dto.FundoResponse;
+import com.renlip.fiis.domain.dto.FundoResponse;
 import com.renlip.fiis.exception.ErroResponse;
 import com.renlip.fiis.service.FundoService;
-import com.renlip.fiis.vo.FundoRequest;
+import com.renlip.fiis.domain.vo.FundoRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

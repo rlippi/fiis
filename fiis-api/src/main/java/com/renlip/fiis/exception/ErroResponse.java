@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @param timestamp momento em que o erro ocorreu
  * @param status    código HTTP (ex: 404, 409)
  * @param erro      descrição curta do tipo de erro (ex: "Not Found")
+ * @param codigo    código estável da mensagem (ex: "FII0005") para consumo pelo cliente
  * @param mensagem  mensagem explicando o que aconteceu
  * @param path      caminho do endpoint onde ocorreu o erro
  * @param detalhes  lista opcional de erros específicos (usado em validação)
@@ -30,6 +31,9 @@ public record ErroResponse(
     @Schema(description = "Tipo do erro", example = "Not Found")
     String erro,
 
+    @Schema(description = "Código estável da mensagem", example = "FII0005")
+    String codigo,
+
     @Schema(description = "Mensagem explicativa", example = "Fundo com ID 42 não encontrado")
     String mensagem,
 
@@ -44,14 +48,14 @@ public record ErroResponse(
     /**
      * Factory simplificado para erros sem detalhes adicionais.
      */
-    public static ErroResponse of(int status, String erro, String mensagem, String path) {
-        return new ErroResponse(LocalDateTime.now(), status, erro, mensagem, path, null);
+    public static ErroResponse of(int status, String erro, String codigo, String mensagem, String path) {
+        return new ErroResponse(LocalDateTime.now(), status, erro, codigo, mensagem, path, null);
     }
 
     /**
      * Factory completo, com lista de detalhes (usado em erros de validação).
      */
-    public static ErroResponse of(int status, String erro, String mensagem, String path, List<String> detalhes) {
-        return new ErroResponse(LocalDateTime.now(), status, erro, mensagem, path, detalhes);
+    public static ErroResponse of(int status, String erro, String codigo, String mensagem, String path, List<String> detalhes) {
+        return new ErroResponse(LocalDateTime.now(), status, erro, codigo, mensagem, path, detalhes);
     }
 }

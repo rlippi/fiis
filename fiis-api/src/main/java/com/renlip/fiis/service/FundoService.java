@@ -5,12 +5,14 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.renlip.fiis.domain.model.Fundo;
-import com.renlip.fiis.domain.repository.FundoRepository;
-import com.renlip.fiis.dto.FundoResponse;
+import com.renlip.fiis.domain.dto.FundoResponse;
+import com.renlip.fiis.domain.entity.Fundo;
+import com.renlip.fiis.domain.enumeration.MensagemEnum;
+import com.renlip.fiis.domain.mapper.FundoMapper;
+import com.renlip.fiis.domain.vo.FundoRequest;
 import com.renlip.fiis.exception.RecursoNaoEncontradoException;
 import com.renlip.fiis.exception.RegraNegocioException;
-import com.renlip.fiis.vo.FundoRequest;
+import com.renlip.fiis.repository.FundoRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 public class FundoService {
 
     private final FundoRepository fundoRepository;
+    private final FundoMapper fundoMapper;
 
     /**
      * Lista todos os fundos cadastrados no sistema.
@@ -37,9 +40,7 @@ public class FundoService {
      * @return lista de fundos (pode estar vazia)
      */
     public List<FundoResponse> listarTodos() {
-        return fundoRepository.findAll().stream()
-            .map(FundoResponse::of)
-            .toList();
+        return fundoMapper.toResponseList(fundoRepository.findAll());
     }
 
     /**
@@ -48,9 +49,7 @@ public class FundoService {
      * @return lista de fundos ativos
      */
     public List<FundoResponse> listarAtivos() {
-        return fundoRepository.findByAtivoTrue().stream()
-            .map(FundoResponse::of)
-            .toList();
+        return fundoMapper.toResponseList(fundoRepository.findByAtivoTrue());
     }
 
     /**
@@ -62,7 +61,7 @@ public class FundoService {
      */
     public FundoResponse buscarPorId(Long id) {
         Fundo fundo = obterEntidade(id);
-        return FundoResponse.of(fundo);
+        return fundoMapper.toResponse(fundo);
     }
 
     /**
@@ -77,8 +76,7 @@ public class FundoService {
     @Transactional
     public FundoResponse criar(FundoRequest request) {
         if (fundoRepository.existsByTicker(request.ticker())) {
-            throw new RegraNegocioException(
-                "Já existe um fundo cadastrado com o ticker " + request.ticker());
+            throw new RegraNegocioException(MensagemEnum.FUNDO_TICKER_JA_CADASTRADO, request.ticker());
         }
 
         Fundo fundo = Fundo.builder()
@@ -91,7 +89,7 @@ public class FundoService {
             .build();
 
         Fundo salvo = fundoRepository.save(fundo);
-        return FundoResponse.of(salvo);
+        return fundoMapper.toResponse(salvo);
     }
 
     /**
@@ -112,8 +110,7 @@ public class FundoService {
 
         boolean tickerMudou = !fundo.getTicker().equalsIgnoreCase(request.ticker());
         if (tickerMudou && fundoRepository.existsByTicker(request.ticker())) {
-            throw new RegraNegocioException(
-                "Já existe um fundo cadastrado com o ticker " + request.ticker());
+            throw new RegraNegocioException(MensagemEnum.FUNDO_TICKER_JA_CADASTRADO, request.ticker());
         }
 
         fundo.setTicker(request.ticker());
@@ -126,7 +123,7 @@ public class FundoService {
         }
 
         Fundo atualizado = fundoRepository.save(fundo);
-        return FundoResponse.of(atualizado);
+        return fundoMapper.toResponse(atualizado);
     }
 
     /**
@@ -151,7 +148,6 @@ public class FundoService {
      */
     private Fundo obterEntidade(Long id) {
         return fundoRepository.findById(id)
-            .orElseThrow(() -> new RecursoNaoEncontradoException(
-                "Fundo com ID " + id + " não encontrado"));
+            .orElseThrow(() -> new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, id));
     }
 }
