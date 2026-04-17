@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.renlip.fiis.dto.EventoCorporativoResponse;
+import com.renlip.fiis.domain.dto.EventoCorporativoResponse;
 import com.renlip.fiis.exception.ErroResponse;
 import com.renlip.fiis.service.EventoCorporativoService;
-import com.renlip.fiis.vo.EventoCorporativoRequest;
+import com.renlip.fiis.domain.vo.EventoCorporativoRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

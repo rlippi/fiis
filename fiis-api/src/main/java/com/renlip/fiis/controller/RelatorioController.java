@@ -7,10 +7,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.renlip.fiis.dto.AlocacaoResponse;
-import com.renlip.fiis.dto.RendaMensalResponse;
-import com.renlip.fiis.dto.RendaPorFundoResponse;
-import com.renlip.fiis.dto.ResumoCarteiraResponse;
+import com.renlip.fiis.domain.dto.AlocacaoResponse;
+import com.renlip.fiis.domain.dto.RendaMensalResponse;
+import com.renlip.fiis.domain.dto.RendaPorFundoResponse;
+import com.renlip.fiis.domain.dto.ResumoCarteiraResponse;
 import com.renlip.fiis.service.RelatorioService;
 
 import io.swagger.v3.oas.annotations.Operation;

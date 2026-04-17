@@ -7,14 +7,16 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.renlip.fiis.domain.model.Cotacao;
-import com.renlip.fiis.domain.model.Fundo;
-import com.renlip.fiis.domain.repository.CotacaoRepository;
-import com.renlip.fiis.domain.repository.FundoRepository;
-import com.renlip.fiis.dto.CotacaoResponse;
+import com.renlip.fiis.domain.dto.CotacaoResponse;
+import com.renlip.fiis.domain.entity.Cotacao;
+import com.renlip.fiis.domain.entity.Fundo;
+import com.renlip.fiis.domain.enumeration.MensagemEnum;
+import com.renlip.fiis.domain.mapper.CotacaoMapper;
+import com.renlip.fiis.domain.vo.CotacaoRequest;
 import com.renlip.fiis.exception.RecursoNaoEncontradoException;
 import com.renlip.fiis.exception.RegraNegocioException;
-import com.renlip.fiis.vo.CotacaoRequest;
+import com.renlip.fiis.repository.CotacaoRepository;
+import com.renlip.fiis.repository.FundoRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -37,6 +39,7 @@ public class CotacaoService {
 
     private final CotacaoRepository cotacaoRepository;
     private final FundoRepository fundoRepository;
+    private final CotacaoMapper cotacaoMapper;
 
     /**
      * Lista todas as cotações cadastradas.
@@ -44,9 +47,7 @@ public class CotacaoService {
      * @return lista completa
      */
     public List<CotacaoResponse> listarTodas() {
-        return cotacaoRepository.findAll().stream()
-            .map(CotacaoResponse::of)
-            .toList();
+        return cotacaoMapper.toResponseList(cotacaoRepository.findAll());
     }
 
     /**
@@ -58,9 +59,7 @@ public class CotacaoService {
      */
     public List<CotacaoResponse> listarPorFundo(Long fundoId) {
         validarFundoExiste(fundoId);
-        return cotacaoRepository.findByFundoIdOrderByDataDesc(fundoId).stream()
-            .map(CotacaoResponse::of)
-            .toList();
+        return cotacaoMapper.toResponseList(cotacaoRepository.findByFundoIdOrderByDataDesc(fundoId));
     }
 
     /**
@@ -71,7 +70,7 @@ public class CotacaoService {
      * @throws RecursoNaoEncontradoException se não existir
      */
     public CotacaoResponse buscarPorId(Long id) {
-        return CotacaoResponse.of(obterEntidade(id));
+        return cotacaoMapper.toResponse(obterEntidade(id));
     }
 
     /**
@@ -84,7 +83,7 @@ public class CotacaoService {
     public Optional<CotacaoResponse> buscarUltimaCotacao(Long fundoId) {
         validarFundoExiste(fundoId);
         return cotacaoRepository.findFirstByFundoIdOrderByDataDesc(fundoId)
-            .map(CotacaoResponse::of);
+            .map(cotacaoMapper::toResponse);
     }
 
     /**
@@ -103,8 +102,7 @@ public class CotacaoService {
 
         if (cotacaoRepository.existsByFundoIdAndData(fundo.getId(), request.data())) {
             throw new RegraNegocioException(
-                "Já existe cotação do fundo " + fundo.getTicker() +
-                " na data " + request.data());
+                MensagemEnum.COTACAO_JA_EXISTE_NO_PERIODO, fundo.getTicker(), request.data());
         }
 
         Cotacao cotacao = Cotacao.builder()
@@ -118,7 +116,7 @@ public class CotacaoService {
             .build();
 
         Cotacao salva = cotacaoRepository.save(cotacao);
-        return CotacaoResponse.of(salva);
+        return cotacaoMapper.toResponse(salva);
     }
 
     /**
@@ -141,8 +139,7 @@ public class CotacaoService {
 
         if (mudouChave && cotacaoRepository.existsByFundoIdAndData(fundo.getId(), request.data())) {
             throw new RegraNegocioException(
-                "Já existe cotação do fundo " + fundo.getTicker() +
-                " na data " + request.data());
+                MensagemEnum.COTACAO_JA_EXISTE_NO_PERIODO, fundo.getTicker(), request.data());
         }
 
         cotacao.setFundo(fundo);
@@ -154,7 +151,7 @@ public class CotacaoService {
         cotacao.setVolume(request.volume());
 
         Cotacao atualizada = cotacaoRepository.save(cotacao);
-        return CotacaoResponse.of(atualizada);
+        return cotacaoMapper.toResponse(atualizada);
     }
 
     /**
@@ -175,26 +172,23 @@ public class CotacaoService {
     private void validarMinimoMaximo(BigDecimal minimo, BigDecimal maximo) {
         if (minimo != null && maximo != null && minimo.compareTo(maximo) > 0) {
             throw new RegraNegocioException(
-                "Preço mínimo (" + minimo + ") não pode ser maior que o preço máximo (" + maximo + ")");
+                MensagemEnum.COTACAO_INTERVALO_PRECO_INVALIDO, minimo, maximo);
         }
     }
 
     private Cotacao obterEntidade(Long id) {
         return cotacaoRepository.findById(id)
-            .orElseThrow(() -> new RecursoNaoEncontradoException(
-                "Cotação com ID " + id + " não encontrada"));
+            .orElseThrow(() -> new RecursoNaoEncontradoException(MensagemEnum.COTACAO_NAO_ENCONTRADA, id));
     }
 
     private Fundo obterFundo(Long fundoId) {
         return fundoRepository.findById(fundoId)
-            .orElseThrow(() -> new RecursoNaoEncontradoException(
-                "Fundo com ID " + fundoId + " não encontrado"));
+            .orElseThrow(() -> new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId));
     }
 
     private void validarFundoExiste(Long fundoId) {
         if (!fundoRepository.existsById(fundoId)) {
-            throw new RecursoNaoEncontradoException(
-                "Fundo com ID " + fundoId + " não encontrado");
+            throw new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId);
         }
     }
 }

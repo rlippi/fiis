@@ -11,21 +11,25 @@ import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.renlip.fiis.domain.enums.TipoEventoCorporativo;
-import com.renlip.fiis.domain.enums.TipoOperacao;
-import com.renlip.fiis.domain.model.Cotacao;
-import com.renlip.fiis.domain.model.EventoCorporativo;
-import com.renlip.fiis.domain.model.Fundo;
-import com.renlip.fiis.domain.model.Operacao;
-import com.renlip.fiis.domain.model.Provento;
-import com.renlip.fiis.domain.repository.CotacaoRepository;
-import com.renlip.fiis.domain.repository.EventoCorporativoRepository;
-import com.renlip.fiis.domain.repository.FundoRepository;
-import com.renlip.fiis.domain.repository.OperacaoRepository;
-import com.renlip.fiis.domain.repository.ProventoRepository;
-import com.renlip.fiis.dto.FundoResumoResponse;
-import com.renlip.fiis.dto.PosicaoResponse;
+import com.renlip.fiis.domain.dto.PosicaoResponse;
+import com.renlip.fiis.domain.entity.Cotacao;
+import com.renlip.fiis.domain.entity.EventoCorporativo;
+import com.renlip.fiis.domain.entity.Fundo;
+import com.renlip.fiis.domain.entity.Operacao;
+import com.renlip.fiis.domain.entity.Provento;
+import com.renlip.fiis.domain.enumeration.MensagemEnum;
+import com.renlip.fiis.domain.enumeration.TipoEventoCorporativo;
+import com.renlip.fiis.domain.enumeration.TipoOperacao;
+import com.renlip.fiis.domain.mapper.FundoResumoMapper;
+import com.renlip.fiis.repository.CotacaoRepository;
+import com.renlip.fiis.repository.EventoCorporativoRepository;
+import com.renlip.fiis.repository.FundoRepository;
+import com.renlip.fiis.repository.OperacaoRepository;
+import com.renlip.fiis.repository.ProventoRepository;
 import com.renlip.fiis.exception.RecursoNaoEncontradoException;
+
+import static com.renlip.fiis.constant.EscalaConstants.ESCALA_CALCULO;
+import static com.renlip.fiis.constant.EscalaConstants.ESCALA_MONETARIA;
 
 import lombok.RequiredArgsConstructor;
 
@@ -52,17 +56,12 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class PosicaoService {
 
-    /** Escala utilizada em cálculos intermediários (preço médio). */
-    private static final int ESCALA_CALCULO = 6;
-
-    /** Escala utilizada nos valores monetários finais. */
-    private static final int ESCALA_MONETARIA = 2;
-
     private final FundoRepository fundoRepository;
     private final OperacaoRepository operacaoRepository;
     private final ProventoRepository proventoRepository;
     private final CotacaoRepository cotacaoRepository;
     private final EventoCorporativoRepository eventoRepository;
+    private final FundoResumoMapper fundoResumoMapper;
 
     /**
      * Calcula a posição consolidada de todos os fundos ativos na carteira.
@@ -84,8 +83,7 @@ public class PosicaoService {
      */
     public PosicaoResponse calcularPosicaoDoFundo(Long fundoId) {
         Fundo fundo = fundoRepository.findById(fundoId)
-            .orElseThrow(() -> new RecursoNaoEncontradoException(
-                "Fundo com ID " + fundoId + " não encontrado"));
+            .orElseThrow(() -> new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId));
         return calcularPosicao(fundo);
     }
 
@@ -168,7 +166,7 @@ public class PosicaoService {
             estado.totalCompras, valorAtual, estado.totalVendas, totalProventos);
 
         return new PosicaoResponse(
-            FundoResumoResponse.of(fundo),
+            fundoResumoMapper.toResponse(fundo),
             estado.qty.intValue(),
             estado.pm.setScale(ESCALA_MONETARIA, RoundingMode.HALF_UP),
             custoAtual,

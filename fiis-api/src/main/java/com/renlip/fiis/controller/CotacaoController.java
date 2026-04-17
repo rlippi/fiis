@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.renlip.fiis.dto.CotacaoResponse;
+import com.renlip.fiis.domain.dto.CotacaoResponse;
 import com.renlip.fiis.exception.ErroResponse;
 import com.renlip.fiis.service.CotacaoService;
-import com.renlip.fiis.vo.CotacaoRequest;
+import com.renlip.fiis.domain.vo.CotacaoRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
