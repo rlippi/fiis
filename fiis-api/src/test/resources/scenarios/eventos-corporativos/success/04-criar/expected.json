@@ -1,0 +1,9 @@
+{
+    "id": 3,
+    "fundo": { "id": 2, "ticker": "MXRF11" },
+    "tipo": "GRUPAMENTO",
+    "tipoDescricao": "Grupamento",
+    "data": "2026-04-10",
+    "fator": 10.000000,
+    "descricao": "Grupamento 10:1"
+}
