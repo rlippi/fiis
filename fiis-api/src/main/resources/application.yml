@@ -27,6 +27,11 @@ fiis:
     ttl-millis: 86400000
     issuer: fiis-api
 
+# Swagger UI - preserva a ordem dos tags declarada em OpenApiConfig
+springdoc:
+  swagger-ui:
+    tags-sorter: ''
+
 # Porta da API
 server:
   port: 8081

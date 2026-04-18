@@ -1,5 +1,7 @@
 package com.renlip.fiis.config;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -10,6 +12,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.tags.Tag;
 
 /**
  * Configuração do Swagger / OpenAPI.
@@ -55,6 +58,16 @@ public class OpenApiConfig {
                     .type(SecurityScheme.Type.HTTP)
                     .scheme("bearer")
                     .bearerFormat("JWT")
-                    .description("Cole apenas o token JWT (sem o prefixo 'Bearer ').")));
+                    .description("Cole apenas o token JWT (sem o prefixo 'Bearer ').")))
+            .tags(List.of(
+                new Tag().name("Autenticação").description("Login e geração de tokens JWT"),
+                new Tag().name("Fundos").description("Operações de CRUD de Fundos de Investimento Imobiliário"),
+                new Tag().name("Cotações").description("Histórico de cotações (preços de mercado) dos FIIs"),
+                new Tag().name("Operações").description("Operações de compra e venda de cotas de FIIs"),
+                new Tag().name("Proventos").description("Rendimentos e amortizações pagos pelos FIIs"),
+                new Tag().name("Eventos Corporativos").description("Bonificações, desdobramentos e grupamentos dos FIIs"),
+                new Tag().name("Posições").description("Posição consolidada em cada fundo (qtd, PM, proventos, yield)"),
+                new Tag().name("Relatórios").description("Relatórios agregados da carteira (dashboard)")
+            ));
     }
 }
