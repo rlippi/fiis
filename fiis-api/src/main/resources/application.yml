@@ -27,11 +27,18 @@ fiis:
     ttl-millis: 86400000
     issuer: fiis-api
 
-# Swagger UI - preserva a ordem dos tags declarada em OpenApiConfig
+# Swagger UI - ordenação alfabética das tags (deixa "Autenticação" no topo)
 springdoc:
   swagger-ui:
-    tags-sorter: ''
+    tags-sorter: alpha
 
 # Porta da API
 server:
   port: 8081
+
+# Encoding dos logs: evita caracteres corrompidos em consoles Windows
+# (acentuação PT-BR fica legível tanto no console quanto em arquivos)
+logging:
+  charset:
+    console: UTF-8
+    file: UTF-8
