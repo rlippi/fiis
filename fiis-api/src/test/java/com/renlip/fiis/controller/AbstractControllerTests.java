@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -35,6 +36,7 @@ import com.renlip.fiis.util.RestTestClient;
 @ActiveProfiles("test")
 @SpringBootTest(classes = FiisApiApplication.class)
 @AutoConfigureMockMvc
+@WithMockUser(username = "test@fiis.com", roles = "USER")
 public abstract class AbstractControllerTests {
 
     @Autowired

@@ -1,0 +1,7 @@
+{
+    "status": 401,
+    "erro": "Unauthorized",
+    "codigo": "FII0016",
+    "mensagem": "Autenticação requerida. Faça login para obter um token válido.",
+    "path": "/api/fundos"
+}

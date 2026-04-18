@@ -1,0 +1,7 @@
+{
+    "status": 400,
+    "erro": "Bad Request",
+    "codigo": "FII0005",
+    "mensagem": "Erro de validação nos campos enviados",
+    "path": "/auth/login"
+}

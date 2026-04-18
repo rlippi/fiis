@@ -6,6 +6,7 @@ import java.util.Locale;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -86,6 +87,26 @@ public class GlobalExceptionHandler {
             detalhes
         );
         return ResponseEntity.badRequest().body(body);
+    }
+
+    /**
+     * Trata falhas de autenticação no login (credencial inválida, usuário
+     * desativado, etc.) → HTTP 401.
+     *
+     * <p>Usa mensagem genérica propositalmente — não revela se o e-mail existe
+     * ou se a senha está errada, evitando enumeração de usuários.</p>
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErroResponse> handleAuthenticationFailure(
+            AuthenticationException ex, HttpServletRequest request) {
+        ErroResponse body = ErroResponse.of(
+            HttpStatus.UNAUTHORIZED.value(),
+            "Unauthorized",
+            MensagemEnum.CREDENCIAIS_INVALIDAS.getCodigo(),
+            resolver(MensagemEnum.CREDENCIAIS_INVALIDAS),
+            request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
 
     /**
