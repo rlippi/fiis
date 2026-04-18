@@ -1,0 +1,7 @@
+{
+    "status": 401,
+    "erro": "Unauthorized",
+    "codigo": "FII0017",
+    "mensagem": "E-mail ou senha inválidos",
+    "path": "/auth/login"
+}

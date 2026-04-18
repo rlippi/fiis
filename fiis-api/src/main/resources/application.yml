@@ -20,6 +20,13 @@ spring:
     encoding: UTF-8
     fallback-to-system-locale: false
 
+# JWT - segredo via env var em ambientes remotos; default só para dev local
+fiis:
+  jwt:
+    secret: ${FIIS_JWT_SECRET:chave-de-desenvolvimento-com-32-bytes-minimo-para-hs256}
+    ttl-millis: 86400000
+    issuer: fiis-api
+
 # Porta da API
 server:
   port: 8081
