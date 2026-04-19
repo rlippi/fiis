@@ -1,59 +1,42 @@
-# FiisWeb
+# fiis-web
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.7.
+Frontend do sistema de controle de investimentos em FIIs.
 
-## Development server
+**Stack:** Angular 21 · PrimeNG 21 · Signals · SCSS
 
-To start a local development server, run:
+Arquitetura detalhada: [ARCHITECTURE.md](./ARCHITECTURE.md).
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Como rodar
 
 ```bash
-ng generate component component-name
+npm install
+npm start
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Abre em `http://localhost:4200` (ou outra porta se a 4200 estiver ocupada).
 
-```bash
-ng generate --help
-```
+## Scripts
 
-## Building
+| Script | O que faz |
+|---|---|
+| `npm start` | Dev server com hot reload (`ng serve`) |
+| `npm run build` | Build de produção |
+| `npm run watch` | Build dev em modo watch |
+| `npm test` | Roda os testes (Vitest) |
 
-To build the project run:
+## Tema claro/escuro/sistema
 
-```bash
-ng build
-```
+O app suporta 3 modos: **Sistema** (default — segue o OS), **Claro** e **Escuro**. A preferência é persistida em `localStorage` e gerenciada pelo `ThemeService` (ver `src/app/core/services/theme.service.ts`).
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Integração com o backend (fiis-api)
 
-## Running unit tests
+| Ambiente | URL |
+|---|---|
+| Dev local | `http://localhost:8081` |
+| HML | `https://fiis-api-hml.onrender.com` |
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+As URLs são configuradas via `src/environments/` (a ser adicionado).
 
-```bash
-ng test
-```
+## Estrutura de código
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Resumo: `src/app/core` (infra), `src/app/shared` (reutilizáveis), `src/app/features` (domínios). Detalhes e regras de dependência em [ARCHITECTURE.md](./ARCHITECTURE.md).
