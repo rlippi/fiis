@@ -1,0 +1,29 @@
+<main class="test-page">
+  <h1>Fiis Web &mdash; Teste PrimeNG + Tema</h1>
+
+  <p-card header="Teste de tema" styleClass="test-card">
+    <div class="test-stack">
+      <p>
+        Tema atual: <strong>{{ themeMode() }}</strong>
+      </p>
+
+      <p-selectbutton
+        [options]="themeOptions"
+        [ngModel]="themeMode()"
+        (ngModelChange)="setTheme($event)"
+        optionLabel="label"
+        optionValue="value"
+        [allowEmpty]="false"
+      />
+
+      <div class="test-buttons">
+        <p-button label="Primary" icon="pi pi-check" />
+        <p-button label="Secondary" severity="secondary" icon="pi pi-user" />
+        <p-button label="Success" severity="success" icon="pi pi-check" />
+        <p-button label="Danger" severity="danger" icon="pi pi-trash" />
+      </div>
+    </div>
+  </p-card>
+
+  <router-outlet />
+</main>
