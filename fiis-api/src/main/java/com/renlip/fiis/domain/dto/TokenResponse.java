@@ -22,7 +22,7 @@ public record TokenResponse(
     @Schema(description = "Tipo do token", example = "Bearer")
     String tipo,
 
-    @Schema(description = "Nome do usuário autenticado", example = "Renan Lippi")
+    @Schema(description = "Nome do usuário autenticado", example = "Renato Lippi")
     String nome,
 
     @Schema(description = "Perfil do usuário autenticado", example = "ADMIN")
