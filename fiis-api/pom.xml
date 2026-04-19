@@ -52,6 +52,12 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+        <!-- Actuator: endpoints de gestão (/actuator/health etc.) usados para health check do Render -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- JJWT: geração e validação de tokens JWT (API moderna 0.12.x) -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
