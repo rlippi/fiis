@@ -6,15 +6,17 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.renlip.fiis.domain.enums.TipoOperacao;
-import com.renlip.fiis.domain.model.Fundo;
-import com.renlip.fiis.domain.model.Operacao;
-import com.renlip.fiis.domain.repository.FundoRepository;
-import com.renlip.fiis.domain.repository.OperacaoRepository;
-import com.renlip.fiis.dto.OperacaoResponse;
+import com.renlip.fiis.domain.dto.OperacaoResponse;
+import com.renlip.fiis.domain.entity.Fundo;
+import com.renlip.fiis.domain.entity.Operacao;
+import com.renlip.fiis.domain.enumeration.MensagemEnum;
+import com.renlip.fiis.domain.enumeration.TipoOperacao;
+import com.renlip.fiis.domain.mapper.OperacaoMapper;
+import com.renlip.fiis.domain.vo.OperacaoRequest;
 import com.renlip.fiis.exception.RecursoNaoEncontradoException;
 import com.renlip.fiis.exception.RegraNegocioException;
-import com.renlip.fiis.vo.OperacaoRequest;
+import com.renlip.fiis.repository.FundoRepository;
+import com.renlip.fiis.repository.OperacaoRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -36,6 +38,7 @@ public class OperacaoService {
 
     private final OperacaoRepository operacaoRepository;
     private final FundoRepository fundoRepository;
+    private final OperacaoMapper operacaoMapper;
 
     /**
      * Lista todas as operações cadastradas.
@@ -43,9 +46,7 @@ public class OperacaoService {
      * @return lista completa de operações
      */
     public List<OperacaoResponse> listarTodas() {
-        return operacaoRepository.findAll().stream()
-            .map(OperacaoResponse::of)
-            .toList();
+        return operacaoMapper.toResponseList(operacaoRepository.findAll());
     }
 
     /**
@@ -58,9 +59,7 @@ public class OperacaoService {
      */
     public List<OperacaoResponse> listarPorFundo(Long fundoId) {
         validarFundoExiste(fundoId);
-        return operacaoRepository.findByFundoIdOrderByDataOperacaoDesc(fundoId).stream()
-            .map(OperacaoResponse::of)
-            .toList();
+        return operacaoMapper.toResponseList(operacaoRepository.findByFundoIdOrderByDataOperacaoDesc(fundoId));
     }
 
     /**
@@ -71,7 +70,7 @@ public class OperacaoService {
      * @throws RecursoNaoEncontradoException se não existir
      */
     public OperacaoResponse buscarPorId(Long id) {
-        return OperacaoResponse.of(obterEntidade(id));
+        return operacaoMapper.toResponse(obterEntidade(id));
     }
 
     /**
@@ -95,8 +94,7 @@ public class OperacaoService {
             Integer posicaoAtual = operacaoRepository.calcularPosicaoAtual(fundo.getId());
             if (request.quantidade() > posicaoAtual) {
                 throw new RegraNegocioException(
-                    "Quantidade a vender (" + request.quantidade() +
-                    ") excede a posição atual em carteira (" + posicaoAtual + ")");
+                    MensagemEnum.OPERACAO_VENDA_EXCEDE_POSICAO, request.quantidade(), posicaoAtual);
             }
         }
 
@@ -111,7 +109,7 @@ public class OperacaoService {
             .build();
 
         Operacao salva = operacaoRepository.save(operacao);
-        return OperacaoResponse.of(salva);
+        return operacaoMapper.toResponse(salva);
     }
 
     /**
@@ -142,7 +140,7 @@ public class OperacaoService {
         operacao.setObservacao(request.observacao());
 
         Operacao atualizada = operacaoRepository.save(operacao);
-        return OperacaoResponse.of(atualizada);
+        return operacaoMapper.toResponse(atualizada);
     }
 
     /**
@@ -178,28 +176,23 @@ public class OperacaoService {
 
         if (posicaoFinal < 0) {
             throw new RegraNegocioException(
-                "Edição inválida: resultaria em posição negativa no fundo. " +
-                "Posição sem essa operação: " + posicaoSemEssaOp +
-                ", efeito da nova operação: " + efeitoNovo);
+                MensagemEnum.OPERACAO_EDICAO_POSICAO_NEGATIVA, posicaoSemEssaOp, efeitoNovo);
         }
     }
 
     private Operacao obterEntidade(Long id) {
         return operacaoRepository.findById(id)
-            .orElseThrow(() -> new RecursoNaoEncontradoException(
-                "Operação com ID " + id + " não encontrada"));
+            .orElseThrow(() -> new RecursoNaoEncontradoException(MensagemEnum.OPERACAO_NAO_ENCONTRADA, id));
     }
 
     private Fundo obterFundo(Long fundoId) {
         return fundoRepository.findById(fundoId)
-            .orElseThrow(() -> new RecursoNaoEncontradoException(
-                "Fundo com ID " + fundoId + " não encontrado"));
+            .orElseThrow(() -> new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId));
     }
 
     private void validarFundoExiste(Long fundoId) {
         if (!fundoRepository.existsById(fundoId)) {
-            throw new RecursoNaoEncontradoException(
-                "Fundo com ID " + fundoId + " não encontrado");
+            throw new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId);
         }
     }
 }

@@ -1,0 +1,35 @@
+[
+    {
+        "id": 1,
+        "ticker": "HGLG11",
+        "nome": "CSHG Logística FII",
+        "cnpj": "11728688000147",
+        "tipo": "TIJOLO",
+        "tipoDescricao": "Tijolo",
+        "segmento": "LOGISTICA",
+        "segmentoDescricao": "Logística",
+        "ativo": true
+    },
+    {
+        "id": 2,
+        "ticker": "MXRF11",
+        "nome": "Maxi Renda FII",
+        "cnpj": "97521225000140",
+        "tipo": "PAPEL",
+        "tipoDescricao": "Papel",
+        "segmento": "RECEBIVEIS",
+        "segmentoDescricao": "Recebíveis",
+        "ativo": true
+    },
+    {
+        "id": 3,
+        "ticker": "VISC11",
+        "nome": "Vinci Shopping FII",
+        "cnpj": "17554274000125",
+        "tipo": "TIJOLO",
+        "tipoDescricao": "Tijolo",
+        "segmento": "SHOPPING",
+        "segmentoDescricao": "Shopping",
+        "ativo": false
+    }
+]

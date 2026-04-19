@@ -1,0 +1,13 @@
+{
+    "status": 400,
+    "erro": "Bad Request",
+    "mensagem": "Erro de validação nos campos enviados",
+    "path": "/api/operacoes",
+    "detalhes": [
+        "fundoId: Fundo é obrigatório",
+        "tipo: Tipo é obrigatório",
+        "dataOperacao: Data da operação é obrigatória",
+        "quantidade: Quantidade é obrigatória",
+        "precoUnitario: Preço unitário é obrigatório"
+    ]
+}

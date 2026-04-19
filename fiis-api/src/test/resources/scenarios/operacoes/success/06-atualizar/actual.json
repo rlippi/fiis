@@ -1,0 +1,9 @@
+{
+    "fundoId": 1,
+    "tipo": "COMPRA",
+    "dataOperacao": "2026-03-15",
+    "quantidade": 12,
+    "precoUnitario": 150.25,
+    "taxas": 0.60,
+    "observacao": "Primeira compra (ajustada)"
+}

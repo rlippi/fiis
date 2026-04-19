@@ -1,0 +1,12 @@
+{
+    "status": 400,
+    "erro": "Bad Request",
+    "mensagem": "Erro de validação nos campos enviados",
+    "path": "/api/fundos",
+    "detalhes": [
+        "ticker: Ticker é obrigatório",
+        "nome: Nome é obrigatório",
+        "tipo: Tipo é obrigatório",
+        "segmento: Segmento é obrigatório"
+    ]
+}

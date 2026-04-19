@@ -1,0 +1,12 @@
+{
+    "status": 400,
+    "erro": "Bad Request",
+    "mensagem": "Erro de validação nos campos enviados",
+    "path": "/api/eventos-corporativos",
+    "detalhes": [
+        "fundoId: Fundo é obrigatório",
+        "tipo: Tipo do evento é obrigatório",
+        "data: Data é obrigatória",
+        "fator: Fator é obrigatório"
+    ]
+}

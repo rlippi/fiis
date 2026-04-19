@@ -1,0 +1,12 @@
+{
+    "id": 4,
+    "fundo": { "id": 1, "ticker": "HGLG11" },
+    "tipo": "VENDA",
+    "tipoDescricao": "Venda",
+    "dataOperacao": "2026-04-10",
+    "quantidade": 2,
+    "precoUnitario": 165.0000,
+    "taxas": 0.30,
+    "valorTotal": 329.70,
+    "observacao": "Realizando lucro"
+}

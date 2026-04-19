@@ -1,0 +1,16 @@
+[
+    {
+        "ano": 2026,
+        "mes": 4,
+        "nomeMes": "Abril",
+        "totalRecebido": 25.20,
+        "quantidadeProventos": 2
+    },
+    {
+        "ano": 2026,
+        "mes": 3,
+        "nomeMes": "Março",
+        "totalRecebido": 10.00,
+        "quantidadeProventos": 1
+    }
+]

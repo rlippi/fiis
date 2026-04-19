@@ -1,0 +1,12 @@
+[
+    {
+        "fundo": { "id": 2, "ticker": "MXRF11" },
+        "totalRecebido": 22.00,
+        "quantidadeProventos": 2
+    },
+    {
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "totalRecebido": 13.20,
+        "quantidadeProventos": 1
+    }
+]

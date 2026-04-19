@@ -1,0 +1,37 @@
+[
+    {
+        "id": 1,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "tipo": "COMPRA",
+        "tipoDescricao": "Compra",
+        "dataOperacao": "2026-03-15",
+        "quantidade": 10,
+        "precoUnitario": 150.2500,
+        "taxas": 0.50,
+        "valorTotal": 1503.00,
+        "observacao": "Primeira compra"
+    },
+    {
+        "id": 2,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "tipo": "COMPRA",
+        "tipoDescricao": "Compra",
+        "dataOperacao": "2026-03-20",
+        "quantidade": 5,
+        "precoUnitario": 155.0000,
+        "taxas": 0.50,
+        "valorTotal": 775.50,
+        "observacao": "Segunda compra"
+    },
+    {
+        "id": 3,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "tipo": "VENDA",
+        "tipoDescricao": "Venda",
+        "dataOperacao": "2026-04-01",
+        "quantidade": 3,
+        "precoUnitario": 160.0000,
+        "taxas": 0.30,
+        "valorTotal": 479.70
+    }
+]

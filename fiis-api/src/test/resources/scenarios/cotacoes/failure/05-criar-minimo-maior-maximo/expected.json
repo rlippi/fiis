@@ -1,0 +1,6 @@
+{
+    "status": 409,
+    "erro": "Conflict",
+    "mensagem": "Preço mínimo (160.00) não pode ser maior que o preço máximo (150.00)",
+    "path": "/api/cotacoes"
+}

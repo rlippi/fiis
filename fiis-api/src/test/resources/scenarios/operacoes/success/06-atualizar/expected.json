@@ -1,0 +1,12 @@
+{
+    "id": 1,
+    "fundo": { "id": 1, "ticker": "HGLG11" },
+    "tipo": "COMPRA",
+    "tipoDescricao": "Compra",
+    "dataOperacao": "2026-03-15",
+    "quantidade": 12,
+    "precoUnitario": 150.2500,
+    "taxas": 0.60,
+    "valorTotal": 1803.60,
+    "observacao": "Primeira compra (ajustada)"
+}

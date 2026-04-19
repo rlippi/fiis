@@ -1,0 +1,12 @@
+{
+    "id": 4,
+    "fundo": { "id": 2, "ticker": "MXRF11", "nome": "Maxi Renda FII" },
+    "tipo": "COMPRA",
+    "tipoDescricao": "Compra",
+    "dataOperacao": "2026-04-10",
+    "quantidade": 100,
+    "precoUnitario": 10.5000,
+    "taxas": 0.25,
+    "valorTotal": 1050.25,
+    "observacao": "Compra MXRF11"
+}

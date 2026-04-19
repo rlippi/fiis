@@ -1,0 +1,8 @@
+{
+    "ticker": "HGLG11",
+    "nome": "Tentando usar ticker de outro fundo",
+    "cnpj": "11728688000147",
+    "tipo": "PAPEL",
+    "segmento": "RECEBIVEIS",
+    "ativo": true
+}

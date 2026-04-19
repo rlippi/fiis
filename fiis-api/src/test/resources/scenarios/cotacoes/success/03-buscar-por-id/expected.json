@@ -1,0 +1,10 @@
+{
+    "id": 1,
+    "fundo": { "id": 1, "ticker": "HGLG11", "nome": "CSHG Logística FII" },
+    "data": "2026-04-16",
+    "precoFechamento": 158.0000,
+    "precoAbertura": 157.5000,
+    "precoMinimo": 157.0000,
+    "precoMaximo": 158.5000,
+    "volume": 1500000.00
+}

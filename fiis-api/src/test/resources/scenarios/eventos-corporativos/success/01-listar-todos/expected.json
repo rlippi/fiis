@@ -1,0 +1,20 @@
+[
+    {
+        "id": 1,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "tipo": "DESDOBRAMENTO",
+        "tipoDescricao": "Desdobramento",
+        "data": "2026-04-12",
+        "fator": 2.000000,
+        "descricao": "Desdobramento 1:2"
+    },
+    {
+        "id": 2,
+        "fundo": { "id": 1, "ticker": "HGLG11" },
+        "tipo": "BONIFICACAO",
+        "tipoDescricao": "Bonificação",
+        "data": "2026-04-15",
+        "fator": 0.100000,
+        "descricao": "Bonificação de 10% em cotas"
+    }
+]

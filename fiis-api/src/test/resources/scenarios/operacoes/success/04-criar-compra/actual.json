@@ -1,0 +1,9 @@
+{
+    "fundoId": 2,
+    "tipo": "COMPRA",
+    "dataOperacao": "2026-04-10",
+    "quantidade": 100,
+    "precoUnitario": 10.50,
+    "taxas": 0.25,
+    "observacao": "Compra MXRF11"
+}

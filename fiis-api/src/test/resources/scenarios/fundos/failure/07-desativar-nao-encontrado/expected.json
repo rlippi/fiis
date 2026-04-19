@@ -1,0 +1,6 @@
+{
+    "status": 404,
+    "erro": "Not Found",
+    "mensagem": "Fundo com ID 999 não encontrado",
+    "path": "/api/fundos/999"
+}

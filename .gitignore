@@ -104,3 +104,13 @@ application-local.properties
 data/
 *.sqlite
 *.db
+
+# ==============================================
+# Pastas locais de referência (não versionar)
+# ==============================================
+exemplo/
+
+# ==============================================
+# Anotações pessoais (contêm credenciais das plataformas)
+# ==============================================
+Anotacoes.md
