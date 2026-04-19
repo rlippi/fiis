@@ -1,0 +1,25 @@
+<main class="home-page">
+  <p-card styleClass="home-card">
+    @if (currentUser(); as user) {
+      <h1>Bem-vindo, {{ user.nome }}!</h1>
+      <p>Perfil: <strong>{{ user.perfil }}</strong></p>
+      <p class="muted">
+        Esta é uma tela provisória. O dashboard completo será implementado nos próximos passos.
+      </p>
+      <p-button
+        label="Sair"
+        icon="pi pi-sign-out"
+        severity="secondary"
+        (onClick)="logout()"
+      />
+    } @else {
+      <h1>Você não está autenticado</h1>
+      <p class="muted">Faça login para continuar.</p>
+      <p-button
+        label="Ir para o login"
+        icon="pi pi-sign-in"
+        (onClick)="goToLogin()"
+      />
+    }
+  </p-card>
+</main>

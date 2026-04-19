@@ -1,38 +1,10 @@
-import { Component, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
-import { SelectButtonModule } from 'primeng/selectbutton';
-
-import { environment } from '../environments/environment';
-import { ThemeService, ThemeMode } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
-  imports: [
-    RouterOutlet,
-    FormsModule,
-    ButtonModule,
-    CardModule,
-    SelectButtonModule
-  ],
+  imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
-export class App {
-  private readonly themeService = inject(ThemeService);
-
-  protected readonly themeMode = this.themeService.mode;
-  protected readonly apiUrl = environment.apiUrl;
-
-  protected readonly themeOptions: { label: string; value: ThemeMode }[] = [
-    { label: 'Sistema', value: 'system' },
-    { label: 'Claro', value: 'light' },
-    { label: 'Escuro', value: 'dark' }
-  ];
-
-  setTheme(mode: ThemeMode): void {
-    this.themeService.setMode(mode);
-  }
-}
+export class App {}
