@@ -32,9 +32,9 @@ springdoc:
   swagger-ui:
     tags-sorter: alpha
 
-# Porta da API
+# Porta da API (Render injeta ${PORT}; default 8081 em dev local)
 server:
-  port: 8081
+  port: ${PORT:8081}
 
 # Encoding dos logs: evita caracteres corrompidos em consoles Windows
 # (acentuação PT-BR fica legível tanto no console quanto em arquivos)
