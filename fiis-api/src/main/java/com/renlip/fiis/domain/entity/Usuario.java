@@ -67,7 +67,7 @@ public class Usuario {
      * Nome completo do usuário (exibido na UI).
      */
     @Column(nullable = false, length = 100)
-    @Schema(description = "Nome completo do usuário", example = "Renan Lippi", maxLength = 100)
+    @Schema(description = "Nome completo do usuário", example = "Renato Lippi", maxLength = 100)
     private String nome;
 
     /**
