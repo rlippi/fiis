@@ -109,3 +109,8 @@ data/
 # Pastas locais de referência (não versionar)
 # ==============================================
 exemplo/
+
+# ==============================================
+# Anotações pessoais (contêm credenciais das plataformas)
+# ==============================================
+Anotacoes.md
