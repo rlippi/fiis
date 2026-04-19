@@ -5,6 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { SelectButtonModule } from 'primeng/selectbutton';
 
+import { environment } from '../environments/environment';
 import { ThemeService, ThemeMode } from './core/services/theme.service';
 
 @Component({
@@ -23,6 +24,7 @@ export class App {
   private readonly themeService = inject(ThemeService);
 
   protected readonly themeMode = this.themeService.mode;
+  protected readonly apiUrl = environment.apiUrl;
 
   protected readonly themeOptions: { label: string; value: ThemeMode }[] = [
     { label: 'Sistema', value: 'system' },
