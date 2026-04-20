@@ -28,6 +28,11 @@ export const routes: Routes = [
           )
       },
       {
+        path: 'fundos',
+        loadChildren: () =>
+          import('./features/fundos/fundos.routes').then((m) => m.fundosRoutes)
+      },
+      {
         path: '',
         redirectTo: 'home',
         pathMatch: 'full'

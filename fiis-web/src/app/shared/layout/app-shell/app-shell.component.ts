@@ -2,7 +2,9 @@ import { Component, inject, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DrawerModule } from 'primeng/drawer';
+import { ToastModule } from 'primeng/toast';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { ThemeMode, ThemeService } from '../../../core/services/theme.service';
@@ -21,7 +23,9 @@ interface MenuItem {
     RouterLink,
     RouterLinkActive,
     ButtonModule,
-    DrawerModule
+    ConfirmDialogModule,
+    DrawerModule,
+    ToastModule
   ],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss'
@@ -36,7 +40,8 @@ export class AppShellComponent {
   protected readonly sidebarOpen = signal(false);
 
   protected readonly menuItems: MenuItem[] = [
-    { label: 'Home', icon: 'pi pi-home', routerLink: '/home' }
+    { label: 'Home', icon: 'pi pi-home', routerLink: '/home' },
+    { label: 'Fundos', icon: 'pi pi-briefcase', routerLink: '/fundos' }
   ];
 
   toggleSidebar(): void {
