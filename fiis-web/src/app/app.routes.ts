@@ -40,6 +40,13 @@ export const routes: Routes = [
           )
       },
       {
+        path: 'proventos',
+        loadChildren: () =>
+          import('./features/proventos/proventos.routes').then(
+            (m) => m.proventosRoutes
+          )
+      },
+      {
         path: '',
         redirectTo: 'home',
         pathMatch: 'full'
