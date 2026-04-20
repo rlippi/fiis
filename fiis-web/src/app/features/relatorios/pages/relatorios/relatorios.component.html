@@ -2,7 +2,48 @@
   <h1 class="title">Relatórios</h1>
 
   @if (loading()) {
-    <p class="muted">Carregando relatórios...</p>
+    <div class="kpi-grid">
+      @for (_ of [1,2,3,4,5,6]; track $index) {
+        <div class="kpi-card">
+          <p-skeleton width="60%" height="0.75rem" />
+          <p-skeleton width="80%" height="1.5rem" styleClass="kpi-skeleton-value" />
+          <p-skeleton width="50%" height="0.75rem" />
+        </div>
+      }
+    </div>
+
+    <div class="charts-row">
+      @for (_ of [1,2]; track $index) {
+        <p-card styleClass="chart-card">
+          <ng-template #title>
+            <p-skeleton width="45%" height="1.2rem" />
+          </ng-template>
+          <div class="chart-container skeleton-chart">
+            <p-skeleton shape="circle" size="220px" />
+          </div>
+        </p-card>
+      }
+    </div>
+
+    <p-card styleClass="chart-card">
+      <ng-template #title>
+        <p-skeleton width="25%" height="1.2rem" />
+      </ng-template>
+      <div class="chart-container chart-tall">
+        <p-skeleton width="100%" height="100%" />
+      </div>
+    </p-card>
+
+    <p-card styleClass="chart-card">
+      <ng-template #title>
+        <p-skeleton width="30%" height="1.2rem" />
+      </ng-template>
+      <div class="skeleton-rows">
+        @for (_ of [1,2,3,4,5]; track $index) {
+          <p-skeleton width="100%" height="2rem" />
+        }
+      </div>
+    </p-card>
   } @else if (resumo(); as r) {
     <div class="kpi-grid">
       <div class="kpi-card">
