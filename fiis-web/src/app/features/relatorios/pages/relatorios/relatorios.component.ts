@@ -4,6 +4,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
+import { SkeletonModule } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { forkJoin } from 'rxjs';
@@ -30,7 +31,7 @@ const PALETA = [
 
 @Component({
   selector: 'app-relatorios',
-  imports: [CurrencyPipe, DecimalPipe, CardModule, ChartModule, TableModule, TagModule],
+  imports: [CurrencyPipe, DecimalPipe, CardModule, ChartModule, SkeletonModule, TableModule, TagModule],
   templateUrl: './relatorios.component.html',
   styleUrl: './relatorios.component.scss'
 })

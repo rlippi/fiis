@@ -91,3 +91,20 @@
   padding: 2rem;
   color: var(--p-text-muted-color);
 }
+
+/* Skeletons — usados enquanto loading() === true */
+.skeleton-chart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kpi-skeleton-value {
+  margin: 0.35rem 0;
+}
+
+.skeleton-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
