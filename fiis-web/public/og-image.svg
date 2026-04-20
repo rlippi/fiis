@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <!-- Fundo em gradiente verde -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#064e3b"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Ícone F à esquerda -->
+  <rect x="80" y="175" width="280" height="280" rx="40" fill="white"/>
+  <text x="220" y="315" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+        font-size="220" font-weight="700" text-anchor="middle"
+        dominant-baseline="middle" fill="#10b981">F</text>
+
+  <!-- Texto à direita -->
+  <text x="420" y="270" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+        font-size="80" font-weight="800" fill="white">FIIs</text>
+  <text x="420" y="350" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+        font-size="36" font-weight="400" fill="white" opacity="0.95">
+    Carteira de Fundos Imobiliários
+  </text>
+  <text x="420" y="420" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+        font-size="26" font-weight="400" fill="white" opacity="0.85">
+    Operações · Proventos · Cotações · Dashboard
+  </text>
+
+  <!-- URL no rodapé -->
+  <text x="80" y="580" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+        font-size="24" font-weight="500" fill="white" opacity="0.75">
+    fiis-web.vercel.app
+  </text>
+</svg>
