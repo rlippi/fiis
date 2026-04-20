@@ -13,20 +13,29 @@ export const routes: Routes = [
       )
   },
   {
-    path: 'home',
+    path: '',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./features/dashboard/home/home.component').then(
-        (m) => m.HomeComponent
-      )
-  },
-  {
-    path: '',
-    redirectTo: '/home',
-    pathMatch: 'full'
+      import('./shared/layout/app-shell/app-shell.component').then(
+        (m) => m.AppShellComponent
+      ),
+    children: [
+      {
+        path: 'home',
+        loadComponent: () =>
+          import('./features/dashboard/home/home.component').then(
+            (m) => m.HomeComponent
+          )
+      },
+      {
+        path: '',
+        redirectTo: 'home',
+        pathMatch: 'full'
+      }
+    ]
   },
   {
     path: '**',
-    redirectTo: '/home'
+    redirectTo: ''
   }
 ];

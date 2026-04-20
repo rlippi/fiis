@@ -1,0 +1,73 @@
+<div class="app-shell">
+  <header class="topbar">
+    <div class="mobile-only">
+      <p-button
+        icon="pi pi-bars"
+        [rounded]="true"
+        [text]="true"
+        severity="secondary"
+        (onClick)="toggleSidebar()"
+        ariaLabel="Abrir menu"
+      />
+    </div>
+
+    <a class="brand" routerLink="/home">FIIs</a>
+
+    <span class="topbar-spacer"></span>
+
+    @if (currentUser(); as user) {
+      <span class="user-name">Olá, {{ user.nome }}</span>
+    }
+
+    <p-button
+      [icon]="themeIcon"
+      [rounded]="true"
+      [text]="true"
+      severity="secondary"
+      (onClick)="cycleTheme()"
+      [ariaLabel]="'Alternar tema (atual: ' + themeMode() + ')'"
+    />
+
+    <p-button
+      icon="pi pi-sign-out"
+      [rounded]="true"
+      [text]="true"
+      severity="secondary"
+      (onClick)="logout()"
+      ariaLabel="Sair"
+    />
+  </header>
+
+  <aside class="sidebar desktop-only">
+    <ng-container *ngTemplateOutlet="menuContent"></ng-container>
+  </aside>
+
+  <p-drawer
+    [visible]="sidebarOpen()"
+    (visibleChange)="sidebarOpen.set($event)"
+    position="left"
+    styleClass="mobile-drawer"
+  >
+    <ng-container *ngTemplateOutlet="menuContent"></ng-container>
+  </p-drawer>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>
+
+<ng-template #menuContent>
+  <nav class="menu">
+    @for (item of menuItems; track item.routerLink) {
+      <a
+        [routerLink]="item.routerLink"
+        routerLinkActive="active"
+        (click)="closeSidebar()"
+        class="menu-item"
+      >
+        <i [class]="item.icon"></i>
+        <span>{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+</ng-template>

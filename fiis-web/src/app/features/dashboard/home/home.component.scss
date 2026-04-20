@@ -2,34 +2,30 @@
   display: block;
 }
 
-.home-page {
-  min-height: 100vh;
+.home {
+  max-width: 900px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  background-color: var(--p-surface-50);
+  flex-direction: column;
+  gap: 1rem;
 }
 
-:host-context(.app-dark) .home-page {
-  background-color: var(--p-surface-950);
+.home h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
-::ng-deep .home-card {
-  width: 100%;
-  max-width: 520px;
+.home .muted {
+  margin: 0;
+  color: var(--p-text-muted-color);
+}
 
-  h1 {
-    margin: 0 0 0.5rem;
-    font-size: 1.75rem;
-  }
-
-  p {
-    margin: 0.5rem 0;
-  }
-
-  p.muted {
-    color: var(--p-text-muted-color);
-    font-size: 0.9rem;
-  }
+.roadmap {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--p-text-color);
 }
