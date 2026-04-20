@@ -3,5 +3,5 @@
     "erro": "Bad Request",
     "codigo": "FII0005",
     "mensagem": "Erro de validação nos campos enviados",
-    "path": "/auth/login"
+    "path": "/api/auth/login"
 }

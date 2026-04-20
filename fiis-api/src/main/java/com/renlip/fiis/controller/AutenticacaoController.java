@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
  * para o endpoint de login, deixando claro que ele não exige token prévio.</p>
  */
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Tag(name = "Autenticação", description = "Login e geração de tokens JWT")
 @SecurityRequirements

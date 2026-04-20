@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 
 import { TokenService } from '../services/token.service';
 
-const ROTAS_PUBLICAS = ['/auth/login'];
+const ROTAS_PUBLICAS = ['/api/auth/login'];
 
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const token = inject(TokenService).getToken();
