@@ -61,6 +61,13 @@ export const routes: Routes = [
           )
       },
       {
+        path: 'relatorios',
+        loadChildren: () =>
+          import('./features/relatorios/relatorios.routes').then(
+            (m) => m.relatoriosRoutes
+          )
+      },
+      {
         path: '',
         redirectTo: 'home',
         pathMatch: 'full'

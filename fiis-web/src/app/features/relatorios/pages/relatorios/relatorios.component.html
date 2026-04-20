@@ -1,0 +1,119 @@
+<section class="relatorios">
+  <h1 class="title">Relatórios</h1>
+
+  @if (loading()) {
+    <p class="muted">Carregando relatórios...</p>
+  } @else if (resumo(); as r) {
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-label">Custo da carteira</span>
+        <span class="kpi-value">{{ r.custoTotalCarteira | currency: 'BRL' }}</span>
+        <span class="kpi-sub">{{ r.quantidadeFundosComPosicao }} fundos com posição</span>
+      </div>
+
+      <div class="kpi-card">
+        <span class="kpi-label">Valor de mercado</span>
+        <span class="kpi-value">{{ r.valorTotalCarteira | currency: 'BRL' }}</span>
+        <span
+          class="kpi-sub"
+          [class.positivo]="r.variacaoPatrimonialPercentual > 0"
+          [class.negativo]="r.variacaoPatrimonialPercentual < 0"
+        >
+          {{ r.variacaoPatrimonialPercentual > 0 ? '+' : '' }}{{ r.variacaoPatrimonialPercentual | number: '1.2-2' }}%
+        </span>
+      </div>
+
+      <div class="kpi-card">
+        <span class="kpi-label">Proventos recebidos</span>
+        <span class="kpi-value">{{ r.totalProventosRecebidos | currency: 'BRL' }}</span>
+        <span class="kpi-sub">
+          Média {{ r.mediaProventosMensal | currency: 'BRL' }} / mês
+        </span>
+      </div>
+
+      <div class="kpi-card">
+        <span class="kpi-label">Yield (s/ custo)</span>
+        <span class="kpi-value">{{ r.yieldCarteiraPercentual | number: '1.2-2' }}%</span>
+        <span class="kpi-sub">
+          DY {{ r.dyCarteiraPercentual | number: '1.2-2' }}%
+        </span>
+      </div>
+
+      <div class="kpi-card">
+        <span class="kpi-label">Lucro realizado</span>
+        <span
+          class="kpi-value"
+          [class.positivo]="r.lucroRealizadoTotal > 0"
+          [class.negativo]="r.lucroRealizadoTotal < 0"
+        >
+          {{ r.lucroRealizadoTotal | currency: 'BRL' }}
+        </span>
+        <span class="kpi-sub">Em vendas executadas</span>
+      </div>
+
+      <div class="kpi-card">
+        <span class="kpi-label">Total investido</span>
+        <span class="kpi-value">{{ r.totalInvestidoHistorico | currency: 'BRL' }}</span>
+        <span class="kpi-sub">
+          Vendas: {{ r.totalVendasHistorico | currency: 'BRL' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <p-card styleClass="chart-card">
+        <ng-template #title>Alocação por tipo</ng-template>
+        <div class="chart-container">
+          <p-chart type="doughnut" [data]="chartTipo()" [options]="pieOptions" />
+        </div>
+      </p-card>
+
+      <p-card styleClass="chart-card">
+        <ng-template #title>Alocação por segmento</ng-template>
+        <div class="chart-container">
+          <p-chart type="doughnut" [data]="chartSegmento()" [options]="pieOptions" />
+        </div>
+      </p-card>
+    </div>
+
+    <p-card styleClass="chart-card">
+      <ng-template #title>Renda mensal</ng-template>
+      <div class="chart-container chart-tall">
+        <p-chart type="bar" [data]="chartRendaMensal()" [options]="barOptions" />
+      </div>
+    </p-card>
+
+    <p-card styleClass="chart-card">
+      <ng-template #title>Top renda por fundo</ng-template>
+      <p-table
+        [value]="rendaPorFundo()"
+        [rows]="10"
+        [paginator]="rendaPorFundo().length > 10"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template #header>
+          <tr>
+            <th>Fundo</th>
+            <th class="num">Proventos pagos</th>
+            <th class="num">Total recebido</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr>
+            <td>
+              <strong>{{ row.fundo.ticker }}</strong>
+              <div class="muted-small">{{ row.fundo.nome }}</div>
+            </td>
+            <td class="num">{{ row.quantidadeProventos }}</td>
+            <td class="num"><strong>{{ row.totalRecebido | currency: 'BRL' }}</strong></td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="3" class="empty">Nenhum provento recebido ainda.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+  }
+</section>
