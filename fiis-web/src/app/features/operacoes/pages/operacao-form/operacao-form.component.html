@@ -1,0 +1,154 @@
+<section class="operacao-form">
+  <p-card>
+    <ng-template #title>{{ titulo() }}</ng-template>
+
+    @if (loading()) {
+      <p class="muted">Carregando...</p>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+        <div class="field span-8">
+          <label for="fundoId">Fundo *</label>
+          <p-select
+            inputId="fundoId"
+            formControlName="fundoId"
+            [options]="fundos()"
+            optionLabel="ticker"
+            optionValue="id"
+            placeholder="Selecione o fundo"
+            [filter]="true"
+            filterBy="ticker,nome"
+            appendTo="body"
+          >
+            <ng-template let-f #selectedItem>
+              <span>{{ f.ticker }} — {{ f.nome }}</span>
+            </ng-template>
+            <ng-template let-f #item>
+              <div class="fundo-option">
+                <strong>{{ f.ticker }}</strong>
+                <span class="fundo-nome">{{ f.nome }}</span>
+              </div>
+            </ng-template>
+          </p-select>
+          @if (form.controls.fundoId.touched && form.controls.fundoId.errors?.['required']) {
+            <small class="error">Fundo é obrigatório.</small>
+          }
+        </div>
+
+        <div class="field span-4">
+          <label for="tipo">Tipo *</label>
+          <p-select
+            inputId="tipo"
+            formControlName="tipo"
+            [options]="tipos"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecione"
+            appendTo="body"
+          />
+          @if (form.controls.tipo.touched && form.controls.tipo.errors?.['required']) {
+            <small class="error">Tipo é obrigatório.</small>
+          }
+        </div>
+
+        <div class="field span-4">
+          <label for="dataOperacao">Data *</label>
+          <p-datepicker
+            inputId="dataOperacao"
+            formControlName="dataOperacao"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            [maxDate]="hoje"
+            appendTo="body"
+          />
+          @if (form.controls.dataOperacao.touched && form.controls.dataOperacao.errors?.['required']) {
+            <small class="error">Data é obrigatória.</small>
+          }
+        </div>
+
+        <div class="field span-4">
+          <label for="quantidade">Quantidade *</label>
+          <p-inputnumber
+            inputId="quantidade"
+            formControlName="quantidade"
+            [min]="1"
+            [showButtons]="true"
+            placeholder="0"
+          />
+          @if (form.controls.quantidade.touched && form.controls.quantidade.errors) {
+            <small class="error">
+              @if (form.controls.quantidade.errors['required']) {
+                Quantidade é obrigatória.
+              } @else if (form.controls.quantidade.errors['min']) {
+                Mínimo 1.
+              }
+            </small>
+          }
+        </div>
+
+        <div class="field span-4">
+          <label for="precoUnitario">Preço unitário *</label>
+          <p-inputnumber
+            inputId="precoUnitario"
+            formControlName="precoUnitario"
+            mode="currency"
+            currency="BRL"
+            locale="pt-BR"
+            [min]="0.01"
+            placeholder="R$ 0,00"
+          />
+          @if (form.controls.precoUnitario.touched && form.controls.precoUnitario.errors) {
+            <small class="error">
+              @if (form.controls.precoUnitario.errors['required']) {
+                Preço é obrigatório.
+              } @else if (form.controls.precoUnitario.errors['min']) {
+                Deve ser maior que zero.
+              }
+            </small>
+          }
+        </div>
+
+        <div class="field span-6">
+          <label for="taxas">Taxas (corretagem)</label>
+          <p-inputnumber
+            inputId="taxas"
+            formControlName="taxas"
+            mode="currency"
+            currency="BRL"
+            locale="pt-BR"
+            [min]="0"
+            placeholder="R$ 0,00"
+          />
+        </div>
+
+        <div class="field span-12">
+          <label for="observacao">Observação</label>
+          <textarea
+            pTextarea
+            id="observacao"
+            formControlName="observacao"
+            rows="2"
+            maxlength="255"
+            placeholder="Opcional"
+          ></textarea>
+        </div>
+
+        <div class="actions span-12">
+          <p-button
+            type="button"
+            label="Cancelar"
+            severity="secondary"
+            [text]="true"
+            [routerLink]="['/operacoes']"
+          />
+          <p-button
+            type="submit"
+            label="Salvar"
+            icon="pi pi-check"
+            [loading]="saving()"
+            [disabled]="form.invalid"
+          />
+        </div>
+      </form>
+    }
+  </p-card>
+</section>

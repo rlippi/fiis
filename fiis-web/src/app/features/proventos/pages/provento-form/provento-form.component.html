@@ -1,0 +1,158 @@
+<section class="provento-form">
+  <p-card>
+    <ng-template #title>{{ titulo() }}</ng-template>
+
+    @if (loading()) {
+      <p class="muted">Carregando...</p>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+        <div class="field span-8">
+          <label for="fundoId">Fundo *</label>
+          <p-select
+            inputId="fundoId"
+            formControlName="fundoId"
+            [options]="fundos()"
+            optionLabel="ticker"
+            optionValue="id"
+            placeholder="Selecione o fundo"
+            [filter]="true"
+            filterBy="ticker,nome"
+            appendTo="body"
+          >
+            <ng-template let-f #selectedItem>
+              <span>{{ f.ticker }} — {{ f.nome }}</span>
+            </ng-template>
+            <ng-template let-f #item>
+              <div class="fundo-option">
+                <strong>{{ f.ticker }}</strong>
+                <span class="fundo-nome">{{ f.nome }}</span>
+              </div>
+            </ng-template>
+          </p-select>
+          @if (form.controls.fundoId.touched && form.controls.fundoId.errors?.['required']) {
+            <small class="error">Fundo é obrigatório.</small>
+          }
+        </div>
+
+        <div class="field span-4">
+          <label for="tipoProvento">Tipo *</label>
+          <p-select
+            inputId="tipoProvento"
+            formControlName="tipoProvento"
+            [options]="tipos"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecione"
+            appendTo="body"
+          />
+          @if (form.controls.tipoProvento.touched && form.controls.tipoProvento.errors?.['required']) {
+            <small class="error">Tipo é obrigatório.</small>
+          }
+        </div>
+
+        <div class="field span-6">
+          <label for="dataReferencia">Data de referência *</label>
+          <p-datepicker
+            inputId="dataReferencia"
+            formControlName="dataReferencia"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            [maxDate]="hoje"
+            appendTo="body"
+          />
+          @if (form.controls.dataReferencia.touched && form.controls.dataReferencia.errors?.['required']) {
+            <small class="error">Data de referência é obrigatória.</small>
+          }
+        </div>
+
+        <div class="field span-6">
+          <label for="dataPagamento">Data de pagamento *</label>
+          <p-datepicker
+            inputId="dataPagamento"
+            formControlName="dataPagamento"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            [maxDate]="hoje"
+            appendTo="body"
+          />
+          @if (form.controls.dataPagamento.touched && form.controls.dataPagamento.errors?.['required']) {
+            <small class="error">Data de pagamento é obrigatória.</small>
+          }
+        </div>
+
+        <div class="field span-6">
+          <label for="valorPorCota">Valor por cota *</label>
+          <p-inputnumber
+            inputId="valorPorCota"
+            formControlName="valorPorCota"
+            mode="currency"
+            currency="BRL"
+            locale="pt-BR"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="6"
+            [min]="0.000001"
+            placeholder="R$ 0,00"
+          />
+          @if (form.controls.valorPorCota.touched && form.controls.valorPorCota.errors) {
+            <small class="error">
+              @if (form.controls.valorPorCota.errors['required']) {
+                Valor por cota é obrigatório.
+              } @else if (form.controls.valorPorCota.errors['min']) {
+                Deve ser maior que zero.
+              }
+            </small>
+          }
+        </div>
+
+        <div class="field span-6">
+          <label for="quantidadeCotas">Quantidade de cotas *</label>
+          <p-inputnumber
+            inputId="quantidadeCotas"
+            formControlName="quantidadeCotas"
+            [min]="1"
+            [showButtons]="true"
+            placeholder="0"
+          />
+          @if (form.controls.quantidadeCotas.touched && form.controls.quantidadeCotas.errors) {
+            <small class="error">
+              @if (form.controls.quantidadeCotas.errors['required']) {
+                Quantidade é obrigatória.
+              } @else if (form.controls.quantidadeCotas.errors['min']) {
+                Mínimo 1.
+              }
+            </small>
+          }
+        </div>
+
+        <div class="field span-12">
+          <label for="observacao">Observação</label>
+          <textarea
+            pTextarea
+            id="observacao"
+            formControlName="observacao"
+            rows="2"
+            maxlength="255"
+            placeholder="Opcional"
+          ></textarea>
+        </div>
+
+        <div class="actions span-12">
+          <p-button
+            type="button"
+            label="Cancelar"
+            severity="secondary"
+            [text]="true"
+            [routerLink]="['/proventos']"
+          />
+          <p-button
+            type="submit"
+            label="Salvar"
+            icon="pi pi-check"
+            [loading]="saving()"
+            [disabled]="form.invalid"
+          />
+        </div>
+      </form>
+    }
+  </p-card>
+</section>

@@ -1,0 +1,45 @@
+:host {
+  display: block;
+}
+
+.proventos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.table-caption {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.table-caption input {
+  width: 24rem;
+  max-width: 100%;
+}
+
+.num {
+  text-align: right;
+}
+
+.col-acoes {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.fundo-nome {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--p-text-muted-color);
+}

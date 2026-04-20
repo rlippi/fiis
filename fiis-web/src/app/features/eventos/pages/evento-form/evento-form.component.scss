@@ -1,0 +1,81 @@
+:host {
+  display: block;
+}
+
+.evento-form {
+  max-width: 820px;
+}
+
+.muted {
+  color: var(--p-text-muted-color);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.field .error {
+  color: var(--p-red-500);
+  font-size: 0.8rem;
+}
+
+.field .hint {
+  color: var(--p-text-muted-color);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.fundo-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.fundo-nome {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+
+.span-4 {
+  grid-column: span 4;
+}
+
+.span-6 {
+  grid-column: span 6;
+}
+
+.span-8 {
+  grid-column: span 8;
+}
+
+.span-12 {
+  grid-column: span 12;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .span-4,
+  .span-6,
+  .span-8 {
+    grid-column: span 12;
+  }
+}
