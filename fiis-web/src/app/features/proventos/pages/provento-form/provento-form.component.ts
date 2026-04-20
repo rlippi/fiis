@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { formatDate } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import {
@@ -18,6 +17,7 @@ import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 
 import { FundoResumoDTO } from '../../../../core/models/dto/fundo-resumo.dto';
+import { ErrorService } from '../../../../core/services/error.service';
 import { FundoLookupService } from '../../../../core/services/fundo-lookup.service';
 import {
   TIPOS_PROVENTO,
@@ -51,6 +51,7 @@ export class ProventoFormComponent implements OnInit {
   private readonly proventoService = inject(ProventoService);
   private readonly fundoLookup = inject(FundoLookupService);
   private readonly messageService = inject(MessageService);
+  private readonly errorService = inject(ErrorService);
 
   protected readonly tipos: TipoProventoOption[] = TIPOS_PROVENTO;
   protected readonly hoje = new Date();
@@ -88,13 +89,9 @@ export class ProventoFormComponent implements OnInit {
           this.loading.set(false);
         }
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err) => {
         this.loading.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro ao carregar fundos',
-          detail: this.mapError(err)
-        });
+        this.errorService.showToast(err, 'Erro ao carregar fundos');
       }
     });
   }
@@ -113,13 +110,9 @@ export class ProventoFormComponent implements OnInit {
         });
         this.loading.set(false);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err) => {
         this.loading.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro ao carregar provento',
-          detail: this.mapError(err)
-        });
+        this.errorService.showToast(err, 'Erro ao carregar provento');
         this.router.navigate(['/proventos']);
       }
     });
@@ -159,22 +152,13 @@ export class ProventoFormComponent implements OnInit {
         });
         this.router.navigate(['/proventos']);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err) => {
         this.saving.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: id == null ? 'Erro ao criar provento' : 'Erro ao atualizar',
-          detail: this.mapError(err)
-        });
+        this.errorService.showToast(
+          err,
+          id == null ? 'Erro ao criar provento' : 'Erro ao atualizar'
+        );
       }
     });
-  }
-
-  private mapError(err: HttpErrorResponse): string {
-    if (err.status === 0) {
-      return 'Não foi possível conectar à API.';
-    }
-    const serverMessage = err.error?.mensagem;
-    return serverMessage ?? 'Erro inesperado.';
   }
 }

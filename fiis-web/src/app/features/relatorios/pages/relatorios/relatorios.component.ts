@@ -1,5 +1,4 @@
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { CardModule } from 'primeng/card';
@@ -9,6 +8,7 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { forkJoin } from 'rxjs';
 
+import { ErrorService } from '../../../../core/services/error.service';
 import { AlocacaoDTO } from '../../models/dto/alocacao.dto';
 import { RendaMensalDTO } from '../../models/dto/renda-mensal.dto';
 import { RendaPorFundoDTO } from '../../models/dto/renda-por-fundo.dto';
@@ -38,6 +38,7 @@ const PALETA = [
 export class RelatoriosComponent implements OnInit {
   private readonly relatorioService = inject(RelatorioService);
   private readonly messageService = inject(MessageService);
+  private readonly errorService = inject(ErrorService);
 
   protected readonly loading = signal(true);
   protected readonly resumo = signal<ResumoCarteiraDTO | null>(null);
@@ -66,13 +67,9 @@ export class RelatoriosComponent implements OnInit {
         this.rendaPorFundo.set(d.rendaPorFundo);
         this.loading.set(false);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err) => {
         this.loading.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro ao carregar relatórios',
-          detail: this.mapError(err)
-        });
+        this.errorService.showToast(err, 'Erro ao carregar relatórios');
       }
     });
   }
@@ -172,13 +169,5 @@ export class RelatoriosComponent implements OnInit {
     if (typeof window === 'undefined') return fallback;
     const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     return value || fallback;
-  }
-
-  private mapError(err: HttpErrorResponse): string {
-    if (err.status === 0) {
-      return 'Não foi possível conectar à API.';
-    }
-    const serverMessage = err.error?.mensagem;
-    return serverMessage ?? 'Erro inesperado.';
   }
 }
