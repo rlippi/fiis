@@ -1,0 +1,107 @@
+<section class="eventos-list">
+  <p-toolbar>
+    <ng-template #start>
+      <h1 class="title">Eventos corporativos</h1>
+    </ng-template>
+    <ng-template #end>
+      <p-button
+        label="Novo evento"
+        icon="pi pi-plus"
+        [routerLink]="['/eventos', 'novo']"
+      />
+    </ng-template>
+  </p-toolbar>
+
+  <p-table
+    #dt
+    [value]="eventos()"
+    [loading]="loading()"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [globalFilterFields]="['fundo.ticker', 'fundo.nome', 'tipoDescricao', 'descricao']"
+    [rowHover]="true"
+    sortField="data"
+    [sortOrder]="-1"
+    dataKey="id"
+    styleClass="p-datatable-sm"
+    responsiveLayout="stack"
+    breakpoint="960px"
+    paginatorPosition="bottom"
+    currentPageReportTemplate="{first} a {last} de {totalRecords}"
+    [showCurrentPageReport]="true"
+  >
+    <ng-template #caption>
+      <div class="table-caption">
+        <p-iconfield iconPosition="left">
+          <p-inputicon class="pi pi-search" />
+          <input
+            pInputText
+            type="text"
+            placeholder="Buscar por ticker, tipo, descrição..."
+            [(ngModel)]="globalFilter"
+            (input)="dt.filterGlobal(globalFilter(), 'contains')"
+          />
+        </p-iconfield>
+      </div>
+    </ng-template>
+
+    <ng-template #header>
+      <tr>
+        <th pSortableColumn="data" style="width: 8rem">
+          Data <p-sortIcon field="data" />
+        </th>
+        <th pSortableColumn="fundo.ticker" style="width: 10rem">
+          Fundo <p-sortIcon field="fundo.ticker" />
+        </th>
+        <th pSortableColumn="tipo" style="width: 11rem">
+          Tipo <p-sortIcon field="tipo" />
+        </th>
+        <th pSortableColumn="fator" style="width: 7rem" class="num">
+          Fator <p-sortIcon field="fator" />
+        </th>
+        <th>Descrição</th>
+        <th style="width: 7rem" class="col-acoes">Ações</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-ev>
+      <tr>
+        <td>{{ ev.data | date: 'dd/MM/yyyy' }}</td>
+        <td>
+          <strong>{{ ev.fundo.ticker }}</strong>
+          <div class="fundo-nome">{{ ev.fundo.nome }}</div>
+        </td>
+        <td>
+          <p-tag [severity]="tagSeverity(ev.tipo)" [value]="ev.tipoDescricao" />
+        </td>
+        <td class="num">{{ ev.fator | number: '1.0-6' }}</td>
+        <td class="muted">{{ ev.descricao || '—' }}</td>
+        <td class="col-acoes">
+          <p-button
+            icon="pi pi-pencil"
+            [rounded]="true"
+            [text]="true"
+            severity="secondary"
+            (onClick)="editar(ev)"
+            ariaLabel="Editar"
+          />
+          <p-button
+            icon="pi pi-trash"
+            [rounded]="true"
+            [text]="true"
+            severity="danger"
+            (onClick)="confirmarExclusao(ev)"
+            ariaLabel="Excluir"
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="6" class="empty">Nenhum evento corporativo encontrado.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</section>
