@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { formatDate } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import {
@@ -17,6 +16,7 @@ import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 
 import { FundoResumoDTO } from '../../../../core/models/dto/fundo-resumo.dto';
+import { ErrorService } from '../../../../core/services/error.service';
 import { FundoLookupService } from '../../../../core/services/fundo-lookup.service';
 import { CotacaoRequestVO } from '../../models/vo/cotacao-request.vo';
 import { CotacaoService } from '../../services/cotacao.service';
@@ -44,6 +44,7 @@ export class CotacaoFormComponent implements OnInit {
   private readonly cotacaoService = inject(CotacaoService);
   private readonly fundoLookup = inject(FundoLookupService);
   private readonly messageService = inject(MessageService);
+  private readonly errorService = inject(ErrorService);
 
   protected readonly hoje = new Date();
 
@@ -80,13 +81,9 @@ export class CotacaoFormComponent implements OnInit {
           this.loading.set(false);
         }
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err) => {
         this.loading.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro ao carregar fundos',
-          detail: this.mapError(err)
-        });
+        this.errorService.showToast(err, 'Erro ao carregar fundos');
       }
     });
   }
@@ -105,13 +102,9 @@ export class CotacaoFormComponent implements OnInit {
         });
         this.loading.set(false);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err) => {
         this.loading.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro ao carregar cotação',
-          detail: this.mapError(err)
-        });
+        this.errorService.showToast(err, 'Erro ao carregar cotação');
         this.router.navigate(['/cotacoes']);
       }
     });
@@ -151,22 +144,13 @@ export class CotacaoFormComponent implements OnInit {
         });
         this.router.navigate(['/cotacoes']);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err) => {
         this.saving.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: id == null ? 'Erro ao criar cotação' : 'Erro ao atualizar',
-          detail: this.mapError(err)
-        });
+        this.errorService.showToast(
+          err,
+          id == null ? 'Erro ao criar cotação' : 'Erro ao atualizar'
+        );
       }
     });
-  }
-
-  private mapError(err: HttpErrorResponse): string {
-    if (err.status === 0) {
-      return 'Não foi possível conectar à API.';
-    }
-    const serverMessage = err.error?.mensagem;
-    return serverMessage ?? 'Erro inesperado.';
   }
 }

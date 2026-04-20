@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -12,6 +11,7 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToolbarModule } from 'primeng/toolbar';
 
+import { ErrorService } from '../../../../core/services/error.service';
 import { ProventoResponseDTO } from '../../models/dto/provento-response.dto';
 import { ProventoService } from '../../services/provento.service';
 
@@ -38,6 +38,7 @@ export class ProventoListComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly errorService = inject(ErrorService);
 
   protected readonly proventos = signal<ProventoResponseDTO[]>([]);
   protected readonly loading = signal(false);
@@ -54,13 +55,9 @@ export class ProventoListComponent implements OnInit {
         this.proventos.set(lista);
         this.loading.set(false);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err) => {
         this.loading.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro ao carregar proventos',
-          detail: this.mapError(err)
-        });
+        this.errorService.showToast(err, 'Erro ao carregar proventos');
       }
     });
   }
@@ -91,21 +88,9 @@ export class ProventoListComponent implements OnInit {
         });
         this.carregar();
       },
-      error: (err: HttpErrorResponse) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro ao excluir',
-          detail: this.mapError(err)
-        });
+      error: (err) => {
+        this.errorService.showToast(err, 'Erro ao excluir');
       }
     });
-  }
-
-  private mapError(err: HttpErrorResponse): string {
-    if (err.status === 0) {
-      return 'Não foi possível conectar à API.';
-    }
-    const serverMessage = err.error?.mensagem;
-    return serverMessage ?? 'Erro inesperado.';
   }
 }

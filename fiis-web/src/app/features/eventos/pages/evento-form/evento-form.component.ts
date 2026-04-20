@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { formatDate } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import {
@@ -18,6 +17,7 @@ import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 
 import { FundoResumoDTO } from '../../../../core/models/dto/fundo-resumo.dto';
+import { ErrorService } from '../../../../core/services/error.service';
 import { FundoLookupService } from '../../../../core/services/fundo-lookup.service';
 import {
   TIPOS_EVENTO_CORPORATIVO,
@@ -51,6 +51,7 @@ export class EventoFormComponent implements OnInit {
   private readonly eventoService = inject(EventoCorporativoService);
   private readonly fundoLookup = inject(FundoLookupService);
   private readonly messageService = inject(MessageService);
+  private readonly errorService = inject(ErrorService);
 
   protected readonly tipos: TipoEventoCorporativoOption[] = TIPOS_EVENTO_CORPORATIVO;
   protected readonly hoje = new Date();
@@ -91,13 +92,9 @@ export class EventoFormComponent implements OnInit {
           this.loading.set(false);
         }
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err) => {
         this.loading.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro ao carregar fundos',
-          detail: this.mapError(err)
-        });
+        this.errorService.showToast(err, 'Erro ao carregar fundos');
       }
     });
   }
@@ -114,13 +111,9 @@ export class EventoFormComponent implements OnInit {
         });
         this.loading.set(false);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err) => {
         this.loading.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro ao carregar evento',
-          detail: this.mapError(err)
-        });
+        this.errorService.showToast(err, 'Erro ao carregar evento');
         this.router.navigate(['/eventos']);
       }
     });
@@ -158,22 +151,13 @@ export class EventoFormComponent implements OnInit {
         });
         this.router.navigate(['/eventos']);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err) => {
         this.saving.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: id == null ? 'Erro ao criar evento' : 'Erro ao atualizar',
-          detail: this.mapError(err)
-        });
+        this.errorService.showToast(
+          err,
+          id == null ? 'Erro ao criar evento' : 'Erro ao atualizar'
+        );
       }
     });
-  }
-
-  private mapError(err: HttpErrorResponse): string {
-    if (err.status === 0) {
-      return 'Não foi possível conectar à API.';
-    }
-    const serverMessage = err.error?.mensagem;
-    return serverMessage ?? 'Erro inesperado.';
   }
 }

@@ -14,6 +14,7 @@ import localePt from '@angular/common/locales/pt';
 import Aura from '@primeuix/themes/aura';
 
 import { routes } from './app.routes';
+import { authErrorInterceptor } from './core/interceptors/auth-error.interceptor';
 import { jwtInterceptor } from './core/interceptors/jwt.interceptor';
 import { ThemeService } from './core/services/theme.service';
 
@@ -23,7 +24,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideHttpClient(withFetch(), withInterceptors([jwtInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([jwtInterceptor, authErrorInterceptor])),
     providePrimeNG({
       theme: {
         preset: Aura,

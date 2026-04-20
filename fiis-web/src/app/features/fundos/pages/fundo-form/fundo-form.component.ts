@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import {
   FormBuilder,
@@ -15,6 +14,7 @@ import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
+import { ErrorService } from '../../../../core/services/error.service';
 import {
   SEGMENTOS,
   Segmento,
@@ -50,6 +50,7 @@ export class FundoFormComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly fundoService = inject(FundoService);
   private readonly messageService = inject(MessageService);
+  private readonly errorService = inject(ErrorService);
 
   protected readonly tipos: TipoFundoOption[] = TIPOS_FUNDO;
   protected readonly segmentos: SegmentoOption[] = SEGMENTOS;
@@ -102,13 +103,9 @@ export class FundoFormComponent implements OnInit {
         });
         this.loading.set(false);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err) => {
         this.loading.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro ao carregar fundo',
-          detail: this.mapError(err)
-        });
+        this.errorService.showToast(err, 'Erro ao carregar fundo');
         this.router.navigate(['/fundos']);
       }
     });
@@ -147,26 +144,17 @@ export class FundoFormComponent implements OnInit {
         });
         this.router.navigate(['/fundos']);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err) => {
         this.saving.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: id == null ? 'Erro ao criar fundo' : 'Erro ao atualizar',
-          detail: this.mapError(err)
-        });
+        this.errorService.showToast(
+          err,
+          id == null ? 'Erro ao criar fundo' : 'Erro ao atualizar'
+        );
       }
     });
   }
 
   private limparCnpj(cnpj: string): string {
     return (cnpj ?? '').replace(/\D/g, '');
-  }
-
-  private mapError(err: HttpErrorResponse): string {
-    if (err.status === 0) {
-      return 'Nao foi possivel conectar a API.';
-    }
-    const serverMessage = err.error?.mensagem;
-    return serverMessage ?? 'Erro inesperado.';
   }
 }

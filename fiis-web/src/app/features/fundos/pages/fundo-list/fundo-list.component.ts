@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -11,6 +10,7 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToolbarModule } from 'primeng/toolbar';
 
+import { ErrorService } from '../../../../core/services/error.service';
 import { FundoResponseDTO } from '../../models/dto/fundo-response.dto';
 import { FundoService } from '../../services/fundo.service';
 
@@ -35,6 +35,7 @@ export class FundoListComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly errorService = inject(ErrorService);
 
   protected readonly fundos = signal<FundoResponseDTO[]>([]);
   protected readonly loading = signal(false);
@@ -51,13 +52,9 @@ export class FundoListComponent implements OnInit {
         this.fundos.set(lista);
         this.loading.set(false);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err) => {
         this.loading.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro ao carregar fundos',
-          detail: this.mapError(err)
-        });
+        this.errorService.showToast(err, 'Erro ao carregar fundos');
       }
     });
   }
@@ -88,21 +85,9 @@ export class FundoListComponent implements OnInit {
         });
         this.carregar();
       },
-      error: (err: HttpErrorResponse) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro ao desativar',
-          detail: this.mapError(err)
-        });
+      error: (err) => {
+        this.errorService.showToast(err, 'Erro ao desativar');
       }
     });
-  }
-
-  private mapError(err: HttpErrorResponse): string {
-    if (err.status === 0) {
-      return 'Nao foi possivel conectar a API.';
-    }
-    const serverMessage = err.error?.mensagem;
-    return serverMessage ?? 'Erro inesperado.';
   }
 }
