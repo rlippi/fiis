@@ -41,7 +41,8 @@ export class AppShellComponent {
 
   protected readonly menuItems: MenuItem[] = [
     { label: 'Home', icon: 'pi pi-home', routerLink: '/home' },
-    { label: 'Fundos', icon: 'pi pi-briefcase', routerLink: '/fundos' }
+    { label: 'Fundos', icon: 'pi pi-briefcase', routerLink: '/fundos' },
+    { label: 'Operações', icon: 'pi pi-arrow-right-arrow-left', routerLink: '/operacoes' }
   ];
 
   toggleSidebar(): void {

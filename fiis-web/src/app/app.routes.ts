@@ -33,6 +33,13 @@ export const routes: Routes = [
           import('./features/fundos/fundos.routes').then((m) => m.fundosRoutes)
       },
       {
+        path: 'operacoes',
+        loadChildren: () =>
+          import('./features/operacoes/operacoes.routes').then(
+            (m) => m.operacoesRoutes
+          )
+      },
+      {
         path: '',
         redirectTo: 'home',
         pathMatch: 'full'
