@@ -43,7 +43,8 @@ export class AppShellComponent {
     { label: 'Home', icon: 'pi pi-home', routerLink: '/home' },
     { label: 'Fundos', icon: 'pi pi-briefcase', routerLink: '/fundos' },
     { label: 'Operações', icon: 'pi pi-arrow-right-arrow-left', routerLink: '/operacoes' },
-    { label: 'Proventos', icon: 'pi pi-dollar', routerLink: '/proventos' }
+    { label: 'Proventos', icon: 'pi pi-dollar', routerLink: '/proventos' },
+    { label: 'Cotações', icon: 'pi pi-chart-line', routerLink: '/cotacoes' }
   ];
 
   toggleSidebar(): void {

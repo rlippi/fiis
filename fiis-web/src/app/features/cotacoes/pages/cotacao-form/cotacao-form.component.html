@@ -1,0 +1,150 @@
+<section class="cotacao-form">
+  <p-card>
+    <ng-template #title>{{ titulo() }}</ng-template>
+
+    @if (loading()) {
+      <p class="muted">Carregando...</p>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+        <div class="field span-8">
+          <label for="fundoId">Fundo *</label>
+          <p-select
+            inputId="fundoId"
+            formControlName="fundoId"
+            [options]="fundos()"
+            optionLabel="ticker"
+            optionValue="id"
+            placeholder="Selecione o fundo"
+            [filter]="true"
+            filterBy="ticker,nome"
+            appendTo="body"
+          >
+            <ng-template let-f #selectedItem>
+              <span>{{ f.ticker }} — {{ f.nome }}</span>
+            </ng-template>
+            <ng-template let-f #item>
+              <div class="fundo-option">
+                <strong>{{ f.ticker }}</strong>
+                <span class="fundo-nome">{{ f.nome }}</span>
+              </div>
+            </ng-template>
+          </p-select>
+          @if (form.controls.fundoId.touched && form.controls.fundoId.errors?.['required']) {
+            <small class="error">Fundo é obrigatório.</small>
+          }
+        </div>
+
+        <div class="field span-4">
+          <label for="data">Data *</label>
+          <p-datepicker
+            inputId="data"
+            formControlName="data"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            [maxDate]="hoje"
+            appendTo="body"
+          />
+          @if (form.controls.data.touched && form.controls.data.errors?.['required']) {
+            <small class="error">Data é obrigatória.</small>
+          }
+        </div>
+
+        <div class="field span-6">
+          <label for="precoFechamento">Preço fechamento *</label>
+          <p-inputnumber
+            inputId="precoFechamento"
+            formControlName="precoFechamento"
+            mode="currency"
+            currency="BRL"
+            locale="pt-BR"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="4"
+            [min]="0.0001"
+            placeholder="R$ 0,00"
+          />
+          @if (form.controls.precoFechamento.touched && form.controls.precoFechamento.errors) {
+            <small class="error">
+              @if (form.controls.precoFechamento.errors['required']) {
+                Preço de fechamento é obrigatório.
+              } @else if (form.controls.precoFechamento.errors['min']) {
+                Deve ser maior que zero.
+              }
+            </small>
+          }
+        </div>
+
+        <div class="field span-6">
+          <label for="precoAbertura">Preço abertura</label>
+          <p-inputnumber
+            inputId="precoAbertura"
+            formControlName="precoAbertura"
+            mode="currency"
+            currency="BRL"
+            locale="pt-BR"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="4"
+            placeholder="R$ 0,00"
+          />
+        </div>
+
+        <div class="field span-4">
+          <label for="precoMinimo">Mínimo do dia</label>
+          <p-inputnumber
+            inputId="precoMinimo"
+            formControlName="precoMinimo"
+            mode="currency"
+            currency="BRL"
+            locale="pt-BR"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="4"
+            placeholder="R$ 0,00"
+          />
+        </div>
+
+        <div class="field span-4">
+          <label for="precoMaximo">Máximo do dia</label>
+          <p-inputnumber
+            inputId="precoMaximo"
+            formControlName="precoMaximo"
+            mode="currency"
+            currency="BRL"
+            locale="pt-BR"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="4"
+            placeholder="R$ 0,00"
+          />
+        </div>
+
+        <div class="field span-4">
+          <label for="volume">Volume financeiro</label>
+          <p-inputnumber
+            inputId="volume"
+            formControlName="volume"
+            mode="currency"
+            currency="BRL"
+            locale="pt-BR"
+            [min]="0"
+            placeholder="R$ 0,00"
+          />
+        </div>
+
+        <div class="actions span-12">
+          <p-button
+            type="button"
+            label="Cancelar"
+            severity="secondary"
+            [text]="true"
+            [routerLink]="['/cotacoes']"
+          />
+          <p-button
+            type="submit"
+            label="Salvar"
+            icon="pi pi-check"
+            [loading]="saving()"
+            [disabled]="form.invalid"
+          />
+        </div>
+      </form>
+    }
+  </p-card>
+</section>

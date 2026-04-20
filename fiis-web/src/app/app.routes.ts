@@ -47,6 +47,13 @@ export const routes: Routes = [
           )
       },
       {
+        path: 'cotacoes',
+        loadChildren: () =>
+          import('./features/cotacoes/cotacoes.routes').then(
+            (m) => m.cotacoesRoutes
+          )
+      },
+      {
         path: '',
         redirectTo: 'home',
         pathMatch: 'full'
