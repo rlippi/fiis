@@ -29,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private static final String[] ROTAS_PUBLICAS = {
-        "/auth/**",
+        "/api/auth/**",
         "/swagger-ui/**",
         "/v3/api-docs/**",
         "/actuator/health",

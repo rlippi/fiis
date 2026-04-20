@@ -65,7 +65,7 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
     }
 
     @Nested
-    @DisplayName("POST /auth/login")
+    @DisplayName("POST /api/auth/login")
     class Login {
 
         @Nested
@@ -78,7 +78,7 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
                 String body = JsonUtils.readFile("scenarios/auth/success/01-login-sucesso/actual.json");
 
                 String json = new String(
-                    restTestClient.post("/auth/login", body)
+                    restTestClient.post("/api/auth/login", body)
                         .expectStatus(HttpStatus.OK)
                         .getResult()
                         .getResponse()
@@ -102,7 +102,7 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
             @DisplayName("retorna 401 quando a senha está errada")
             void testSenhaErrada() throws IOException {
                 String body = JsonUtils.readFile("scenarios/auth/failure/01-senha-errada/actual.json");
-                restTestClient.post("/auth/login", body)
+                restTestClient.post("/api/auth/login", body)
                     .expectStatus(HttpStatus.UNAUTHORIZED)
                     .expectBody("scenarios/auth/failure/01-senha-errada/expected.json");
             }
@@ -111,7 +111,7 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
             @DisplayName("retorna 401 quando o e-mail não existe")
             void testEmailNaoExiste() throws IOException {
                 String body = JsonUtils.readFile("scenarios/auth/failure/02-email-nao-existe/actual.json");
-                restTestClient.post("/auth/login", body)
+                restTestClient.post("/api/auth/login", body)
                     .expectStatus(HttpStatus.UNAUTHORIZED)
                     .expectBody("scenarios/auth/failure/02-email-nao-existe/expected.json");
             }
@@ -120,7 +120,7 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
             @DisplayName("retorna 400 quando o e-mail é inválido")
             void testEmailInvalido() throws IOException {
                 String body = JsonUtils.readFile("scenarios/auth/failure/03-email-invalido/actual.json");
-                restTestClient.post("/auth/login", body)
+                restTestClient.post("/api/auth/login", body)
                     .expectStatus(HttpStatus.BAD_REQUEST)
                     .expectBody("scenarios/auth/failure/03-email-invalido/expected.json");
             }
@@ -129,7 +129,7 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
             @DisplayName("retorna 400 quando e-mail e senha estão em branco")
             void testCamposObrigatorios() throws IOException {
                 String body = JsonUtils.readFile("scenarios/auth/failure/04-campos-obrigatorios/actual.json");
-                restTestClient.post("/auth/login", body)
+                restTestClient.post("/api/auth/login", body)
                     .expectStatus(HttpStatus.BAD_REQUEST)
                     .expectBody("scenarios/auth/failure/04-campos-obrigatorios/expected.json");
             }
@@ -138,7 +138,7 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
             @DisplayName("retorna 401 quando o usuário está inativo")
             void testUsuarioInativo() throws IOException {
                 String body = JsonUtils.readFile("scenarios/auth/failure/05-usuario-inativo/actual.json");
-                restTestClient.post("/auth/login", body)
+                restTestClient.post("/api/auth/login", body)
                     .expectStatus(HttpStatus.UNAUTHORIZED)
                     .expectBody("scenarios/auth/failure/05-usuario-inativo/expected.json");
             }

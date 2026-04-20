@@ -31,7 +31,7 @@ export class AuthService {
 
   login(credencial: CredencialVO): Observable<TokenResponse> {
     return this.http
-      .post<TokenResponse>(`${environment.apiUrl}/auth/login`, credencial)
+      .post<TokenResponse>(`${environment.apiUrl}/api/auth/login`, credencial)
       .pipe(
         tap((response) => {
           this.tokenService.setToken(response.token);

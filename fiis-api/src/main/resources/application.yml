@@ -38,6 +38,20 @@ spring:
     encoding: UTF-8
     fallback-to-system-locale: false
 
+  # Spring MVC - handling de rotas inexistentes
+  # throw-exception-if-no-handler-found=true faz o DispatcherServlet lançar NoHandlerFoundException
+  # em vez de fazer forward interno para /error. Isso permite que o GlobalExceptionHandler capture
+  # e devolva um 404 no formato padrão ErroResponse.
+  mvc:
+    throw-exception-if-no-handler-found: true
+
+  # Desabilita o handling de resources estáticos padrão (default mappings para /static, /public, etc.)
+  # Sem isso, o Spring tenta servir um recurso estático para rotas inexistentes antes de chegar no
+  # DispatcherServlet, o que impede o NoHandlerFoundException de ser lançado.
+  web:
+    resources:
+      add-mappings: false
+
 # JWT - segredo via env var em ambientes remotos; default só para dev local
 fiis:
   jwt:
