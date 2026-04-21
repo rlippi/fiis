@@ -29,30 +29,33 @@ import com.renlip.fiis.domain.entity.Fundo;
 public interface FundoRepository extends JpaRepository<Fundo, Long> {
 
     /**
-     * Busca um fundo pelo seu ticker (código de negociação).
-     *
-     * <p>O ticker é único, então retorna no máximo um resultado.
-     * Retorna {@link Optional#empty()} se não encontrar.</p>
-     *
-     * @param ticker código do fundo (ex: "HGLG11")
-     * @return {@link Optional} contendo o fundo, se existir
-     */
-    Optional<Fundo> findByTicker(String ticker);
-
-    /**
-     * Verifica se já existe um fundo cadastrado com o ticker informado.
-     *
-     * <p>Útil para validações de duplicidade antes de cadastrar um novo fundo.</p>
-     *
-     * @param ticker código do fundo (ex: "HGLG11")
-     * @return {@code true} se o ticker já existir no banco
-     */
-    boolean existsByTicker(String ticker);
-
-    /**
-     * Lista todos os fundos ativos na carteira (ativo = true).
-     *
-     * @return lista de fundos ativos
+     * Lista todos os fundos ativos do sistema (ativo = true), sem filtro de
+     * usuário. Usado apenas pelo perfil ADMIN.
      */
     List<Fundo> findByAtivoTrue();
+
+    /**
+     * Busca um fundo pelo ID garantindo que pertence ao usuário informado.
+     * Retorna {@link Optional#empty()} se o fundo não existir OU pertencer a
+     * outro usuário (evita vazar existência de recursos alheios).
+     */
+    Optional<Fundo> findByIdAndUsuarioId(Long id, Long usuarioId);
+
+    /**
+     * Lista todos os fundos de um usuário.
+     */
+    List<Fundo> findByUsuarioId(Long usuarioId);
+
+    /**
+     * Lista os fundos ativos (ativo = true) de um usuário.
+     */
+    List<Fundo> findByUsuarioIdAndAtivoTrue(Long usuarioId);
+
+    /**
+     * Verifica se o usuário já tem um fundo cadastrado com o ticker informado.
+     *
+     * <p>A unicidade do ticker é <b>por usuário</b>: dois usuários distintos
+     * podem cadastrar o mesmo ticker (ex: HGLG11) em suas carteiras.</p>
+     */
+    boolean existsByUsuarioIdAndTicker(Long usuarioId, String ticker);
 }

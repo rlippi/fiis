@@ -58,6 +58,14 @@ public class Operacao {
     private Long id;
 
     /**
+     * Usuário dono desta operação (carteira isolada por usuário).
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    @Schema(description = "Usuário dono da operação", accessMode = Schema.AccessMode.READ_ONLY)
+    private Usuario usuario;
+
+    /**
      * Fundo relacionado à operação.
      *
      * <p><b>Relacionamento:</b> {@link ManyToOne} — muitas operações pertencem

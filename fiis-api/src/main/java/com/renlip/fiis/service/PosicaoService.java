@@ -21,12 +21,13 @@ import com.renlip.fiis.domain.enumeration.MensagemEnum;
 import com.renlip.fiis.domain.enumeration.TipoEventoCorporativo;
 import com.renlip.fiis.domain.enumeration.TipoOperacao;
 import com.renlip.fiis.domain.mapper.FundoResumoMapper;
+import com.renlip.fiis.exception.RecursoNaoEncontradoException;
 import com.renlip.fiis.repository.CotacaoRepository;
 import com.renlip.fiis.repository.EventoCorporativoRepository;
 import com.renlip.fiis.repository.FundoRepository;
 import com.renlip.fiis.repository.OperacaoRepository;
 import com.renlip.fiis.repository.ProventoRepository;
-import com.renlip.fiis.exception.RecursoNaoEncontradoException;
+import com.renlip.fiis.support.UsuarioLogadoSupport;
 
 import static com.renlip.fiis.constant.EscalaConstants.ESCALA_CALCULO;
 import static com.renlip.fiis.constant.EscalaConstants.ESCALA_MONETARIA;
@@ -41,15 +42,11 @@ import lombok.RequiredArgsConstructor;
  * médio, custo, lucro realizado, proventos recebidos, yield, valor atual
  * de mercado e rentabilidade total.</p>
  *
- * <p><b>Regras do preço médio (padrão do mercado brasileiro):</b>
- * <ul>
- *   <li><b>COMPRA:</b> PM = (custo_anterior + valor_compra) / (qtd_anterior + qtd_compra);</li>
- *   <li><b>VENDA:</b> PM não muda, custo é reduzido proporcionalmente (qtd_vendida × PM);</li>
- *   <li><b>BONIFICACAO:</b> qty × (1 + fator), custo preservado, PM diminui;</li>
- *   <li><b>DESDOBRAMENTO:</b> qty × fator, custo preservado, PM diminui;</li>
- *   <li><b>GRUPAMENTO:</b> qty / fator, custo preservado, PM aumenta.</li>
- * </ul>
- * </p>
+ * <p><b>Multi-usuário:</b> a posição é calculada sempre sobre os fundos da
+ * carteira do usuário autenticado. ADMIN, ao chamar diretamente um fundo por
+ * ID, pode calcular posição de qualquer fundo; mas a visão "de todos" devolve
+ * apenas a carteira do próprio admin — o dashboard não consolida dados de
+ * múltiplos usuários.</p>
  */
 @Service
 @RequiredArgsConstructor
@@ -62,35 +59,31 @@ public class PosicaoService {
     private final CotacaoRepository cotacaoRepository;
     private final EventoCorporativoRepository eventoRepository;
     private final FundoResumoMapper fundoResumoMapper;
+    private final UsuarioLogadoSupport usuarioLogado;
 
     /**
-     * Calcula a posição consolidada de todos os fundos ativos na carteira.
-     *
-     * @return lista de posições (uma por fundo)
+     * Calcula a posição consolidada de todos os fundos ativos da carteira
+     * do usuário autenticado.
      */
     public List<PosicaoResponse> calcularPosicaoDeTodos() {
-        return fundoRepository.findByAtivoTrue().stream()
+        return fundoRepository.findByUsuarioIdAndAtivoTrue(usuarioLogado.getUsuarioIdAtual()).stream()
             .map(this::calcularPosicao)
             .toList();
     }
 
     /**
      * Calcula a posição consolidada de um fundo específico.
-     *
-     * @param fundoId ID do fundo
-     * @return posição consolidada
-     * @throws RecursoNaoEncontradoException se o fundo não existir
+     * USER só acessa os seus fundos; ADMIN pode qualquer.
      */
     public PosicaoResponse calcularPosicaoDoFundo(Long fundoId) {
-        Fundo fundo = fundoRepository.findById(fundoId)
-            .orElseThrow(() -> new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId));
-        return calcularPosicao(fundo);
+        Optional<Fundo> fundo = usuarioLogado.isAdmin()
+            ? fundoRepository.findById(fundoId)
+            : fundoRepository.findByIdAndUsuarioId(fundoId, usuarioLogado.getUsuarioIdAtual());
+
+        return calcularPosicao(fundo.orElseThrow(() ->
+            new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId)));
     }
 
-    /**
-     * Estado mutável da posição durante o processamento cronológico.
-     * Evita retornar múltiplos valores por método.
-     */
     private static final class EstadoPosicao {
         BigDecimal qty = BigDecimal.ZERO;
         BigDecimal custo = BigDecimal.ZERO;
@@ -100,10 +93,6 @@ public class PosicaoService {
         BigDecimal lucroRealizado = BigDecimal.ZERO;
     }
 
-    /**
-     * Item genérico da linha do tempo (operação ou evento corporativo),
-     * usado para processar os dois em ordem cronológica única.
-     */
     private record ItemTimeline(LocalDate data, Operacao operacao, EventoCorporativo evento) {
         static ItemTimeline de(Operacao op) {
             return new ItemTimeline(op.getDataOperacao(), op, null);
@@ -113,12 +102,6 @@ public class PosicaoService {
         }
     }
 
-    /**
-     * Executa o cálculo completo da posição de um fundo.
-     *
-     * <p>Processa operações e eventos corporativos na ordem cronológica em
-     * que aconteceram, mantendo os indicadores consolidados.</p>
-     */
     private PosicaoResponse calcularPosicao(Fundo fundo) {
         List<Operacao> operacoes = operacaoRepository.findByFundoIdOrderByDataOperacaoDesc(fundo.getId());
         List<EventoCorporativo> eventos = eventoRepository.findByFundoIdOrderByDataAsc(fundo.getId());
@@ -185,9 +168,6 @@ public class PosicaoService {
         );
     }
 
-    /**
-     * Aplica o efeito de uma operação (COMPRA ou VENDA) no estado da posição.
-     */
     private void aplicarOperacao(Operacao op, EstadoPosicao e) {
         BigDecimal opQty = BigDecimal.valueOf(op.getQuantidade());
         BigDecimal opValor = op.calcularValorTotal();
@@ -213,21 +193,6 @@ public class PosicaoService {
         }
     }
 
-    /**
-     * Aplica o efeito de um evento corporativo no estado da posição.
-     *
-     * <p><b>Comportamento:</b>
-     * <ul>
-     *   <li>Calcula a quantidade teórica pós-evento (pode ser fracional);</li>
-     *   <li>Calcula o novo PM proporcional (preserva a relação custo/quantidade);</li>
-     *   <li><b>Trunca a quantidade para inteiro</b> — frações são pagas em
-     *       dinheiro pela corretora e não ficam em carteira;</li>
-     *   <li>Ajusta o custo como {@code qty × PM} (custo reduz junto com as frações).</li>
-     * </ul>
-     * </p>
-     *
-     * <p>Se no momento do evento a posição estiver zerada, o evento é ignorado.</p>
-     */
     private void aplicarEvento(EventoCorporativo evento, EstadoPosicao e) {
         if (e.qty.signum() <= 0) {
             return;
@@ -253,11 +218,6 @@ public class PosicaoService {
         e.custo = novaQtyInteira.multiply(pmNovo);
     }
 
-    /**
-     * Rentabilidade total sobre o capital investido no fundo.
-     *
-     * <p>Fórmula: {@code (valorAtual + totalVendas + totalProventos − totalCompras) / totalCompras × 100}.</p>
-     */
     private BigDecimal calcularRentabilidadeTotal(BigDecimal totalCompras, BigDecimal valorAtual,
                                                   BigDecimal totalVendas, BigDecimal totalProventos) {
         if (totalCompras.signum() <= 0) {

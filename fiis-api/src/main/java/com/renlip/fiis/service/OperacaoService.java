@@ -2,6 +2,7 @@ package com.renlip.fiis.service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ import com.renlip.fiis.exception.RecursoNaoEncontradoException;
 import com.renlip.fiis.exception.RegraNegocioException;
 import com.renlip.fiis.repository.FundoRepository;
 import com.renlip.fiis.repository.OperacaoRepository;
+import com.renlip.fiis.support.UsuarioLogadoSupport;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,11 +27,15 @@ import lombok.RequiredArgsConstructor;
  *
  * <p>Principais validações:
  * <ul>
- *   <li>Fundo referenciado deve existir;</li>
+ *   <li>Fundo referenciado deve pertencer ao usuário autenticado;</li>
  *   <li>Em uma VENDA, deve haver cotas suficientes em carteira
  *       (soma de compras − vendas).</li>
  * </ul>
  * </p>
+ *
+ * <p><b>Multi-usuário:</b> USER vê/edita apenas suas operações; ADMIN tem acesso global.
+ * O campo {@code usuario} é sempre o dono do fundo — garante coerência mesmo quando
+ * ADMIN manipula recursos alheios.</p>
  */
 @Service
 @RequiredArgsConstructor
@@ -39,36 +45,24 @@ public class OperacaoService {
     private final OperacaoRepository operacaoRepository;
     private final FundoRepository fundoRepository;
     private final OperacaoMapper operacaoMapper;
+    private final UsuarioLogadoSupport usuarioLogado;
 
-    /**
-     * Lista todas as operações cadastradas.
-     *
-     * @return lista completa de operações
-     */
     public List<OperacaoResponse> listarTodas() {
-        return operacaoMapper.toResponseList(operacaoRepository.findAll());
+        List<Operacao> operacoes = usuarioLogado.isAdmin()
+            ? operacaoRepository.findAll()
+            : operacaoRepository.findByUsuarioId(usuarioLogado.getUsuarioIdAtual());
+        return operacaoMapper.toResponseList(operacoes);
     }
 
     /**
-     * Lista as operações de um fundo específico, ordenadas da mais recente
-     * para a mais antiga.
-     *
-     * @param fundoId ID do fundo
-     * @return lista de operações
-     * @throws RecursoNaoEncontradoException se o fundo não existir
+     * Lista as operações de um fundo específico (mais recente primeiro).
+     * O fundo precisa pertencer ao usuário autenticado (ou qualquer um, se ADMIN).
      */
     public List<OperacaoResponse> listarPorFundo(Long fundoId) {
-        validarFundoExiste(fundoId);
+        obterFundoDoUsuario(fundoId);
         return operacaoMapper.toResponseList(operacaoRepository.findByFundoIdOrderByDataOperacaoDesc(fundoId));
     }
 
-    /**
-     * Busca uma operação pelo ID.
-     *
-     * @param id identificador
-     * @return operação encontrada
-     * @throws RecursoNaoEncontradoException se não existir
-     */
     public OperacaoResponse buscarPorId(Long id) {
         return operacaoMapper.toResponse(obterEntidade(id));
     }
@@ -78,17 +72,16 @@ public class OperacaoService {
      *
      * <p><b>Regras:</b>
      * <ul>
-     *   <li>Fundo deve existir;</li>
+     *   <li>Fundo deve existir e pertencer ao usuário autenticado (ou ADMIN pode usar qualquer);</li>
      *   <li>Para VENDA, a quantidade não pode exceder as cotas em carteira.</li>
      * </ul>
      * </p>
      *
-     * @param request dados da nova operação
-     * @return operação criada
+     * <p>O {@code usuario} da operação é sempre o dono do fundo.</p>
      */
     @Transactional
     public OperacaoResponse criar(OperacaoRequest request) {
-        Fundo fundo = obterFundo(request.fundoId());
+        Fundo fundo = obterFundoDoUsuario(request.fundoId());
 
         if (request.tipo() == TipoOperacao.VENDA) {
             Integer posicaoAtual = operacaoRepository.calcularPosicaoAtual(fundo.getId());
@@ -99,6 +92,7 @@ public class OperacaoService {
         }
 
         Operacao operacao = Operacao.builder()
+            .usuario(fundo.getUsuario())
             .fundo(fundo)
             .tipo(request.tipo())
             .dataOperacao(request.dataOperacao())
@@ -112,25 +106,14 @@ public class OperacaoService {
         return operacaoMapper.toResponse(salva);
     }
 
-    /**
-     * Atualiza uma operação existente.
-     *
-     * <p>Permite trocar de fundo, tipo, quantidade, preço, data, taxas e
-     * observação. Revalida as regras de venda considerando a nova situação.</p>
-     *
-     * @param id      identificador da operação
-     * @param request novos dados
-     * @return operação atualizada
-     * @throws RecursoNaoEncontradoException se a operação ou o fundo não existirem
-     * @throws RegraNegocioException         se a nova venda deixar posição negativa
-     */
     @Transactional
     public OperacaoResponse atualizar(Long id, OperacaoRequest request) {
         Operacao operacao = obterEntidade(id);
-        Fundo novoFundo = obterFundo(request.fundoId());
+        Fundo novoFundo = obterFundoDoUsuario(request.fundoId());
 
         validarPosicaoParaEdicao(operacao, novoFundo.getId(), request);
 
+        operacao.setUsuario(novoFundo.getUsuario());
         operacao.setFundo(novoFundo);
         operacao.setTipo(request.tipo());
         operacao.setDataOperacao(request.dataOperacao());
@@ -143,27 +126,12 @@ public class OperacaoService {
         return operacaoMapper.toResponse(atualizada);
     }
 
-    /**
-     * Remove uma operação do banco (hard delete).
-     *
-     * <p>Diferente do {@code Fundo} (que usa soft delete), operações são
-     * apagadas mesmo. Se precisar de histórico, pode-se migrar futuramente.</p>
-     *
-     * @param id identificador
-     * @throws RecursoNaoEncontradoException se não existir
-     */
     @Transactional
     public void deletar(Long id) {
         Operacao operacao = obterEntidade(id);
         operacaoRepository.delete(operacao);
     }
 
-    /**
-     * Valida se a alteração mantém a posição consistente (não negativa).
-     *
-     * <p>Recalcula a posição do fundo ignorando o efeito da operação atual
-     * e simula o impacto da operação no formato editado.</p>
-     */
     private void validarPosicaoParaEdicao(Operacao atual, Long novoFundoId, OperacaoRequest req) {
         Long fundoAtualId = atual.getFundo().getId();
 
@@ -181,18 +149,20 @@ public class OperacaoService {
     }
 
     private Operacao obterEntidade(Long id) {
-        return operacaoRepository.findById(id)
-            .orElseThrow(() -> new RecursoNaoEncontradoException(MensagemEnum.OPERACAO_NAO_ENCONTRADA, id));
+        Optional<Operacao> operacao = usuarioLogado.isAdmin()
+            ? operacaoRepository.findById(id)
+            : operacaoRepository.findByIdAndUsuarioId(id, usuarioLogado.getUsuarioIdAtual());
+
+        return operacao.orElseThrow(() ->
+            new RecursoNaoEncontradoException(MensagemEnum.OPERACAO_NAO_ENCONTRADA, id));
     }
 
-    private Fundo obterFundo(Long fundoId) {
-        return fundoRepository.findById(fundoId)
-            .orElseThrow(() -> new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId));
-    }
+    private Fundo obterFundoDoUsuario(Long fundoId) {
+        Optional<Fundo> fundo = usuarioLogado.isAdmin()
+            ? fundoRepository.findById(fundoId)
+            : fundoRepository.findByIdAndUsuarioId(fundoId, usuarioLogado.getUsuarioIdAtual());
 
-    private void validarFundoExiste(Long fundoId) {
-        if (!fundoRepository.existsById(fundoId)) {
-            throw new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId);
-        }
+        return fundo.orElseThrow(() ->
+            new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId));
     }
 }

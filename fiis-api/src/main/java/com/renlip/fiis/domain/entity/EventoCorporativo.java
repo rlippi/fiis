@@ -58,6 +58,14 @@ public class EventoCorporativo {
     private Long id;
 
     /**
+     * Usuário dono deste evento (carteira isolada por usuário).
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    @Schema(description = "Usuário dono do evento", accessMode = Schema.AccessMode.READ_ONLY)
+    private Usuario usuario;
+
+    /**
      * Fundo a que o evento se refere.
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

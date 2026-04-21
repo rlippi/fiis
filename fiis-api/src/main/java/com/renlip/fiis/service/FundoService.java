@@ -1,18 +1,21 @@
 package com.renlip.fiis.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.renlip.fiis.domain.dto.FundoResponse;
 import com.renlip.fiis.domain.entity.Fundo;
+import com.renlip.fiis.domain.entity.Usuario;
 import com.renlip.fiis.domain.enumeration.MensagemEnum;
 import com.renlip.fiis.domain.mapper.FundoMapper;
 import com.renlip.fiis.domain.vo.FundoRequest;
 import com.renlip.fiis.exception.RecursoNaoEncontradoException;
 import com.renlip.fiis.exception.RegraNegocioException;
 import com.renlip.fiis.repository.FundoRepository;
+import com.renlip.fiis.support.UsuarioLogadoSupport;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +24,10 @@ import lombok.RequiredArgsConstructor;
  *
  * <p>Orquestra as operações entre o Controller (que recebe requisições HTTP)
  * e o Repository (que acessa o banco de dados). Contém validações de domínio
- * como unicidade de ticker e conversões entre VO, Entity e DTO.</p>
+ * como unicidade de ticker por usuário e conversões entre VO, Entity e DTO.</p>
+ *
+ * <p><b>Multi-usuário:</b> usuários com perfil {@code USER} só enxergam e
+ * manipulam seus próprios fundos; {@code ADMIN} tem acesso global.</p>
  *
  * <p>Todos os métodos de escrita estão anotados com {@link Transactional}
  * para garantir atomicidade das operações no banco.</p>
@@ -33,31 +39,34 @@ public class FundoService {
 
     private final FundoRepository fundoRepository;
     private final FundoMapper fundoMapper;
+    private final UsuarioLogadoSupport usuarioLogado;
 
     /**
-     * Lista todos os fundos cadastrados no sistema.
-     *
-     * @return lista de fundos (pode estar vazia)
+     * Lista todos os fundos visíveis ao usuário autenticado.
+     * ADMIN vê todos; USER vê apenas os seus.
      */
     public List<FundoResponse> listarTodos() {
-        return fundoMapper.toResponseList(fundoRepository.findAll());
+        List<Fundo> fundos = usuarioLogado.isAdmin()
+            ? fundoRepository.findAll()
+            : fundoRepository.findByUsuarioId(usuarioLogado.getUsuarioIdAtual());
+        return fundoMapper.toResponseList(fundos);
     }
 
     /**
-     * Lista apenas os fundos ativos (ativo = true).
-     *
-     * @return lista de fundos ativos
+     * Lista apenas os fundos ativos (ativo = true) visíveis ao usuário autenticado.
      */
     public List<FundoResponse> listarAtivos() {
-        return fundoMapper.toResponseList(fundoRepository.findByAtivoTrue());
+        List<Fundo> fundos = usuarioLogado.isAdmin()
+            ? fundoRepository.findByAtivoTrue()
+            : fundoRepository.findByUsuarioIdAndAtivoTrue(usuarioLogado.getUsuarioIdAtual());
+        return fundoMapper.toResponseList(fundos);
     }
 
     /**
      * Busca um fundo pelo seu ID.
      *
-     * @param id identificador do fundo
-     * @return dados do fundo encontrado
-     * @throws RecursoNaoEncontradoException se não existir fundo com o ID informado
+     * @throws RecursoNaoEncontradoException se não existir OU se pertencer a outro usuário
+     *         (USER não vê recursos alheios; a resposta é 404 para não vazar existência).
      */
     public FundoResponse buscarPorId(Long id) {
         Fundo fundo = obterEntidade(id);
@@ -65,21 +74,23 @@ public class FundoService {
     }
 
     /**
-     * Cadastra um novo fundo.
+     * Cadastra um novo fundo para o usuário autenticado.
      *
-     * <p><b>Regra de negócio:</b> não pode existir outro fundo com o mesmo ticker.</p>
+     * <p><b>Regra de negócio:</b> o mesmo usuário não pode ter dois fundos com o
+     * mesmo ticker. Outros usuários podem ter o mesmo ticker em suas carteiras.</p>
      *
-     * @param request dados do fundo a ser criado
-     * @return fundo criado (com ID gerado e datas preenchidas)
-     * @throws RegraNegocioException se já existir fundo com o ticker informado
+     * @throws RegraNegocioException se o usuário já tiver um fundo com o ticker informado
      */
     @Transactional
     public FundoResponse criar(FundoRequest request) {
-        if (fundoRepository.existsByTicker(request.ticker())) {
+        Usuario dono = usuarioLogado.getUsuarioAtual();
+
+        if (fundoRepository.existsByUsuarioIdAndTicker(dono.getId(), request.ticker())) {
             throw new RegraNegocioException(MensagemEnum.FUNDO_TICKER_JA_CADASTRADO, request.ticker());
         }
 
         Fundo fundo = Fundo.builder()
+            .usuario(dono)
             .ticker(request.ticker())
             .nome(request.nome())
             .cnpj(request.cnpj())
@@ -93,23 +104,20 @@ public class FundoService {
     }
 
     /**
-     * Atualiza um fundo existente.
+     * Atualiza um fundo existente do usuário autenticado (ou qualquer um, se ADMIN).
      *
-     * <p><b>Regra de negócio:</b> se o ticker for alterado, o novo ticker não
-     * pode estar em uso por outro fundo.</p>
-     *
-     * @param id      identificador do fundo a atualizar
-     * @param request novos dados
-     * @return fundo atualizado
-     * @throws RecursoNaoEncontradoException se o ID não existir
-     * @throws RegraNegocioException         se o novo ticker já estiver em uso
+     * <p><b>Regra de negócio:</b> se o ticker for alterado, o dono do fundo não pode
+     * ter outro fundo com esse ticker. Note que a duplicidade é verificada no contexto
+     * do <i>dono</i> do fundo (não do autenticado), para o caso de ADMIN editar
+     * recurso alheio.</p>
      */
     @Transactional
     public FundoResponse atualizar(Long id, FundoRequest request) {
         Fundo fundo = obterEntidade(id);
 
         boolean tickerMudou = !fundo.getTicker().equalsIgnoreCase(request.ticker());
-        if (tickerMudou && fundoRepository.existsByTicker(request.ticker())) {
+        if (tickerMudou
+                && fundoRepository.existsByUsuarioIdAndTicker(fundo.getUsuario().getId(), request.ticker())) {
             throw new RegraNegocioException(MensagemEnum.FUNDO_TICKER_JA_CADASTRADO, request.ticker());
         }
 
@@ -128,12 +136,6 @@ public class FundoService {
 
     /**
      * Desativa um fundo (soft delete).
-     *
-     * <p>Marca o fundo como inativo ({@code ativo = false}) mas mantém o
-     * registro no banco, preservando o histórico.</p>
-     *
-     * @param id identificador do fundo
-     * @throws RecursoNaoEncontradoException se o ID não existir
      */
     @Transactional
     public void desativar(Long id) {
@@ -143,11 +145,17 @@ public class FundoService {
     }
 
     /**
-     * Busca a entidade pelo ID ou lança exceção.
-     * Método privado para reuso interno.
+     * Busca a entidade por ID aplicando o filtro de ownership.
+     *
+     * <p>USER só enxerga os próprios fundos; ADMIN enxerga todos. Caso o fundo
+     * não exista ou pertença a outro usuário (para USER), lança 404.</p>
      */
     private Fundo obterEntidade(Long id) {
-        return fundoRepository.findById(id)
-            .orElseThrow(() -> new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, id));
+        Optional<Fundo> fundo = usuarioLogado.isAdmin()
+            ? fundoRepository.findById(id)
+            : fundoRepository.findByIdAndUsuarioId(id, usuarioLogado.getUsuarioIdAtual());
+
+        return fundo.orElseThrow(() ->
+            new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, id));
     }
 }

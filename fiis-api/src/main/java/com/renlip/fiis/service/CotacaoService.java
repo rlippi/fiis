@@ -26,6 +26,7 @@ import com.renlip.fiis.exception.RegraNegocioException;
 import com.renlip.fiis.repository.CotacaoRepository;
 import com.renlip.fiis.repository.FundoRepository;
 import com.renlip.fiis.support.BrapiClient;
+import com.renlip.fiis.support.UsuarioLogadoSupport;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,12 +35,16 @@ import lombok.RequiredArgsConstructor;
  *
  * <p>Principais validações:
  * <ul>
- *   <li>Fundo referenciado deve existir;</li>
+ *   <li>Fundo referenciado deve pertencer ao usuário autenticado;</li>
  *   <li>Não pode haver duas cotações do mesmo fundo na mesma data;</li>
  *   <li>Se {@code precoMinimo} e {@code precoMaximo} forem informados,
  *       mínimo deve ser ≤ máximo.</li>
  * </ul>
  * </p>
+ *
+ * <p><b>Multi-usuário:</b> USER vê apenas suas cotações; ADMIN tem acesso global.
+ * A importação BRAPI ocorre sempre no contexto do usuário autenticado — ADMIN
+ * importa a sua própria carteira.</p>
  */
 @Service
 @RequiredArgsConstructor
@@ -50,64 +55,33 @@ public class CotacaoService {
     private final FundoRepository fundoRepository;
     private final CotacaoMapper cotacaoMapper;
     private final BrapiClient brapiClient;
+    private final UsuarioLogadoSupport usuarioLogado;
 
-    /**
-     * Lista todas as cotações cadastradas.
-     *
-     * @return lista completa
-     */
     public List<CotacaoResponse> listarTodas() {
-        return cotacaoMapper.toResponseList(cotacaoRepository.findAll());
+        List<Cotacao> cotacoes = usuarioLogado.isAdmin()
+            ? cotacaoRepository.findAll()
+            : cotacaoRepository.findByUsuarioId(usuarioLogado.getUsuarioIdAtual());
+        return cotacaoMapper.toResponseList(cotacoes);
     }
 
-    /**
-     * Lista as cotações de um fundo específico (mais recente primeiro).
-     *
-     * @param fundoId ID do fundo
-     * @return lista de cotações
-     * @throws RecursoNaoEncontradoException se o fundo não existir
-     */
     public List<CotacaoResponse> listarPorFundo(Long fundoId) {
-        validarFundoExiste(fundoId);
+        obterFundoDoUsuario(fundoId);
         return cotacaoMapper.toResponseList(cotacaoRepository.findByFundoIdOrderByDataDesc(fundoId));
     }
 
-    /**
-     * Busca uma cotação pelo ID.
-     *
-     * @param id identificador
-     * @return cotação encontrada
-     * @throws RecursoNaoEncontradoException se não existir
-     */
     public CotacaoResponse buscarPorId(Long id) {
         return cotacaoMapper.toResponse(obterEntidade(id));
     }
 
-    /**
-     * Retorna a cotação mais recente de um fundo.
-     *
-     * @param fundoId ID do fundo
-     * @return {@link Optional} com a última cotação, ou vazio se nunca houve cotação
-     * @throws RecursoNaoEncontradoException se o fundo não existir
-     */
     public Optional<CotacaoResponse> buscarUltimaCotacao(Long fundoId) {
-        validarFundoExiste(fundoId);
+        obterFundoDoUsuario(fundoId);
         return cotacaoRepository.findFirstByFundoIdOrderByDataDesc(fundoId)
             .map(cotacaoMapper::toResponse);
     }
 
-    /**
-     * Cria uma nova cotação.
-     *
-     * @param request dados da cotação
-     * @return cotação criada
-     * @throws RecursoNaoEncontradoException se o fundo não existir
-     * @throws RegraNegocioException         se já houver cotação para o fundo/data
-     *                                       ou se mínimo &gt; máximo
-     */
     @Transactional
     public CotacaoResponse criar(CotacaoRequest request) {
-        Fundo fundo = obterFundo(request.fundoId());
+        Fundo fundo = obterFundoDoUsuario(request.fundoId());
         validarMinimoMaximo(request.precoMinimo(), request.precoMaximo());
 
         if (cotacaoRepository.existsByFundoIdAndData(fundo.getId(), request.data())) {
@@ -116,6 +90,7 @@ public class CotacaoService {
         }
 
         Cotacao cotacao = Cotacao.builder()
+            .usuario(fundo.getUsuario())
             .fundo(fundo)
             .data(request.data())
             .precoFechamento(request.precoFechamento())
@@ -129,19 +104,10 @@ public class CotacaoService {
         return cotacaoMapper.toResponse(salva);
     }
 
-    /**
-     * Atualiza uma cotação existente.
-     *
-     * @param id      identificador
-     * @param request novos dados
-     * @return cotação atualizada
-     * @throws RecursoNaoEncontradoException se a cotação ou o fundo não existirem
-     * @throws RegraNegocioException         se violar unicidade ou coerência
-     */
     @Transactional
     public CotacaoResponse atualizar(Long id, CotacaoRequest request) {
         Cotacao cotacao = obterEntidade(id);
-        Fundo fundo = obterFundo(request.fundoId());
+        Fundo fundo = obterFundoDoUsuario(request.fundoId());
         validarMinimoMaximo(request.precoMinimo(), request.precoMaximo());
 
         boolean mudouChave = !cotacao.getFundo().getId().equals(fundo.getId())
@@ -152,6 +118,7 @@ public class CotacaoService {
                 MensagemEnum.COTACAO_JA_EXISTE_NO_PERIODO, fundo.getTicker(), request.data());
         }
 
+        cotacao.setUsuario(fundo.getUsuario());
         cotacao.setFundo(fundo);
         cotacao.setData(request.data());
         cotacao.setPrecoFechamento(request.precoFechamento());
@@ -164,12 +131,6 @@ public class CotacaoService {
         return cotacaoMapper.toResponse(atualizada);
     }
 
-    /**
-     * Remove uma cotação (hard delete).
-     *
-     * @param id identificador
-     * @throws RecursoNaoEncontradoException se não existir
-     */
     @Transactional
     public void deletar(Long id) {
         Cotacao cotacao = obterEntidade(id);
@@ -177,20 +138,18 @@ public class CotacaoService {
     }
 
     /**
-     * Importa cotações da BRAPI para todos os fundos ativos da carteira, na
-     * data de hoje. Uma chamada HTTP cobre todos os tickers de uma vez.
+     * Importa cotações da BRAPI para todos os fundos ativos da carteira do usuário
+     * autenticado, na data de hoje. ADMIN importa apenas os seus fundos próprios
+     * (não da carteira de outros usuários).
      *
      * <p>Comportamento de upsert: se já existe cotação do fundo para hoje,
      * os preços são atualizados com os valores mais recentes da BRAPI. Se não
      * existe, uma nova cotação é criada.</p>
-     *
-     * @return resumo com totais de criados, atualizados e tickers não encontrados
-     * @throws RegraNegocioException se a carteira não tiver fundos ativos ou
-     *                               se a BRAPI estiver indisponível
      */
     @Transactional
     public ImportacaoBrapiResponse importarViaBrapi() {
-        List<Fundo> fundosAtivos = fundoRepository.findByAtivoTrue();
+        Long usuarioId = usuarioLogado.getUsuarioIdAtual();
+        List<Fundo> fundosAtivos = fundoRepository.findByUsuarioIdAndAtivoTrue(usuarioId);
         if (fundosAtivos.isEmpty()) {
             throw new RegraNegocioException(MensagemEnum.CARTEIRA_SEM_FUNDOS_ATIVOS);
         }
@@ -227,6 +186,7 @@ public class CotacaoService {
                 cotacaoRepository.findByFundoIdAndData(fundo.getId(), hoje);
 
             Cotacao cotacao = existente.orElseGet(() -> Cotacao.builder()
+                .usuario(fundo.getUsuario())
                 .fundo(fundo)
                 .data(hoje)
                 .build());
@@ -249,9 +209,6 @@ public class CotacaoService {
             fundosAtivos.size(), criados, atualizados, naoEncontrados);
     }
 
-    /**
-     * Valida que o preço mínimo é menor ou igual ao máximo, se ambos informados.
-     */
     private void validarMinimoMaximo(BigDecimal minimo, BigDecimal maximo) {
         if (minimo != null && maximo != null && minimo.compareTo(maximo) > 0) {
             throw new RegraNegocioException(
@@ -260,18 +217,20 @@ public class CotacaoService {
     }
 
     private Cotacao obterEntidade(Long id) {
-        return cotacaoRepository.findById(id)
-            .orElseThrow(() -> new RecursoNaoEncontradoException(MensagemEnum.COTACAO_NAO_ENCONTRADA, id));
+        Optional<Cotacao> cotacao = usuarioLogado.isAdmin()
+            ? cotacaoRepository.findById(id)
+            : cotacaoRepository.findByIdAndUsuarioId(id, usuarioLogado.getUsuarioIdAtual());
+
+        return cotacao.orElseThrow(() ->
+            new RecursoNaoEncontradoException(MensagemEnum.COTACAO_NAO_ENCONTRADA, id));
     }
 
-    private Fundo obterFundo(Long fundoId) {
-        return fundoRepository.findById(fundoId)
-            .orElseThrow(() -> new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId));
-    }
+    private Fundo obterFundoDoUsuario(Long fundoId) {
+        Optional<Fundo> fundo = usuarioLogado.isAdmin()
+            ? fundoRepository.findById(fundoId)
+            : fundoRepository.findByIdAndUsuarioId(fundoId, usuarioLogado.getUsuarioIdAtual());
 
-    private void validarFundoExiste(Long fundoId) {
-        if (!fundoRepository.existsById(fundoId)) {
-            throw new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId);
-        }
+        return fundo.orElseThrow(() ->
+            new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId));
     }
 }
