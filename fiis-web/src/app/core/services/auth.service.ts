@@ -5,6 +5,7 @@ import { Observable, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { CredencialVO } from '../models/vo/credencial.vo';
+import { SignupVO } from '../models/vo/signup.vo';
 import { TokenResponse } from '../models/dto/token-response.dto';
 import { Perfil } from '../models/enumeration/perfil.enum';
 import { TokenService } from './token.service';
@@ -32,23 +33,29 @@ export class AuthService {
   login(credencial: CredencialVO): Observable<TokenResponse> {
     return this.http
       .post<TokenResponse>(`${environment.apiUrl}/api/auth/login`, credencial)
-      .pipe(
-        tap((response) => {
-          this.tokenService.setToken(response.token);
-          const user: UsuarioLogado = {
-            nome: response.nome,
-            perfil: response.perfil
-          };
-          this.storage?.setItem(USER_KEY, JSON.stringify(user));
-          this._currentUser.set(user);
-        })
-      );
+      .pipe(tap((response) => this.persistSession(response)));
+  }
+
+  signup(signup: SignupVO): Observable<TokenResponse> {
+    return this.http
+      .post<TokenResponse>(`${environment.apiUrl}/api/auth/signup`, signup)
+      .pipe(tap((response) => this.persistSession(response)));
   }
 
   logout(): void {
     this.tokenService.clearToken();
     this.storage?.removeItem(USER_KEY);
     this._currentUser.set(null);
+  }
+
+  private persistSession(response: TokenResponse): void {
+    this.tokenService.setToken(response.token);
+    const user: UsuarioLogado = {
+      nome: response.nome,
+      perfil: response.perfil
+    };
+    this.storage?.setItem(USER_KEY, JSON.stringify(user));
+    this._currentUser.set(user);
   }
 
   private get storage(): Storage | undefined {
