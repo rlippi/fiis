@@ -13,6 +13,14 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'signup',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/signup/signup.component').then(
+        (m) => m.SignupComponent
+      )
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () =>

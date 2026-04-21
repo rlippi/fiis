@@ -1,4 +1,4 @@
-<div class="login-page">
+<div class="signup-page">
   <div class="theme-toggle">
     <p-button
       [icon]="themeIcon"
@@ -10,14 +10,27 @@
     />
   </div>
 
-  <div class="login-shell">
-    <header class="login-header">
+  <div class="signup-shell">
+    <header class="signup-header">
       <h1>FIIs</h1>
-      <p>Carteira de Fundos Imobiliários</p>
+      <p>Crie sua conta para gerenciar sua carteira</p>
     </header>
 
-    <p-card styleClass="login-card">
-      <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
+    <p-card styleClass="signup-card">
+      <form [formGroup]="form" (ngSubmit)="submit()" class="signup-form">
+        <div class="field">
+          <label for="nome">Nome</label>
+          <input
+            pInputText
+            id="nome"
+            type="text"
+            formControlName="nome"
+            placeholder="Seu nome completo"
+            autocomplete="name"
+            maxlength="100"
+          />
+        </div>
+
         <div class="field">
           <label for="email">E-mail</label>
           <input
@@ -27,6 +40,7 @@
             formControlName="email"
             placeholder="seu@email.com"
             autocomplete="email"
+            maxlength="150"
           />
         </div>
 
@@ -37,7 +51,7 @@
             formControlName="senha"
             [toggleMask]="true"
             [feedback]="false"
-            placeholder="Digite sua senha"
+            placeholder="Mínimo de 6 caracteres"
             styleClass="full-width"
           />
         </div>
@@ -48,15 +62,15 @@
 
         <p-button
           type="submit"
-          label="Entrar"
-          icon="pi pi-sign-in"
+          label="Criar conta"
+          icon="pi pi-user-plus"
           [loading]="loading()"
           [disabled]="form.invalid"
           styleClass="submit-button"
         />
 
-        <p class="signup-link">
-          Não tem conta? <a routerLink="/signup">Criar conta</a>
+        <p class="login-link">
+          Já tem conta? <a routerLink="/login">Entrar</a>
         </p>
       </form>
     </p-card>
