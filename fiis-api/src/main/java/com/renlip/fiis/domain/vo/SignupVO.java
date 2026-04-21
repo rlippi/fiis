@@ -1,5 +1,7 @@
 package com.renlip.fiis.domain.vo;
 
+import com.renlip.fiis.validator.SenhaForte;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -8,12 +10,13 @@ import jakarta.validation.constraints.Size;
 /**
  * Value Object de entrada para criação de uma nova conta de usuário.
  *
- * <p>Validações de senha forte (complexidade mínima, maiúsculas, números etc.)
- * ficam para a próxima fase; aqui aplicamos apenas tamanho mínimo básico.</p>
+ * <p>A senha passa pela política {@link SenhaForte} (mín. 8 caracteres, ao menos
+ * uma letra e um número). Usuários cadastrados antes dessa política permanecem
+ * com a senha que tinham — a política só vale para novos signups e resets.</p>
  *
  * @param nome  nome completo do usuário (máx. 100 chars)
  * @param email e-mail (será o login) — deve ser único no banco
- * @param senha senha em texto plano (mín. 6, máx. 50 chars) — será armazenada em BCrypt
+ * @param senha senha em texto plano (será armazenada em BCrypt)
  */
 @Schema(description = "Dados de cadastro de novo usuário")
 public record SignupVO(
@@ -30,8 +33,10 @@ public record SignupVO(
     String email,
 
     @NotBlank(message = "Senha é obrigatória")
-    @Size(min = 6, max = 50, message = "Senha deve ter entre 6 e 50 caracteres")
-    @Schema(description = "Senha (mínimo 6 caracteres)", example = "minhaSenha123", requiredMode = Schema.RequiredMode.REQUIRED, minLength = 6, maxLength = 50)
+    @Size(max = 50, message = "Senha deve ter no máximo 50 caracteres")
+    @SenhaForte
+    @Schema(description = "Senha (mínimo 8 caracteres, com pelo menos uma letra e um número)",
+        example = "minhaSenha123", requiredMode = Schema.RequiredMode.REQUIRED, minLength = 8, maxLength = 50)
     String senha
 
 ) {}

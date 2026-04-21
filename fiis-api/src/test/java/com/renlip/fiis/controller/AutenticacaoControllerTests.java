@@ -194,7 +194,7 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
             }
 
             @Test
-            @DisplayName("[400 Bad Request] quando a senha tem menos que 6 caracteres")
+            @DisplayName("[400 Bad Request] quando a senha tem menos que 8 caracteres")
             void testSignupSenhaCurta() throws IOException {
                 String body = JsonUtils.readFile("scenarios/auth/signup/failure/02-senha-curta/actual.json");
                 restTestClient.post("/api/auth/signup", body)
@@ -209,6 +209,24 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
                 restTestClient.post("/api/auth/signup", body)
                     .expectStatus(HttpStatus.BAD_REQUEST)
                     .expectBody("scenarios/auth/signup/failure/03-campos-obrigatorios/expected.json");
+            }
+
+            @Test
+            @DisplayName("[400 Bad Request] quando a senha não tem nenhuma letra")
+            void testSignupSenhaSemLetra() throws IOException {
+                String body = JsonUtils.readFile("scenarios/auth/signup/failure/04-senha-sem-letra/actual.json");
+                restTestClient.post("/api/auth/signup", body)
+                    .expectStatus(HttpStatus.BAD_REQUEST)
+                    .expectBody("scenarios/auth/signup/failure/04-senha-sem-letra/expected.json");
+            }
+
+            @Test
+            @DisplayName("[400 Bad Request] quando a senha não tem nenhum número")
+            void testSignupSenhaSemNumero() throws IOException {
+                String body = JsonUtils.readFile("scenarios/auth/signup/failure/05-senha-sem-numero/actual.json");
+                restTestClient.post("/api/auth/signup", body)
+                    .expectStatus(HttpStatus.BAD_REQUEST)
+                    .expectBody("scenarios/auth/signup/failure/05-senha-sem-numero/expected.json");
             }
         }
     }

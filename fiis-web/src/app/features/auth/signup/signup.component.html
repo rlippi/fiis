@@ -51,9 +51,12 @@
             formControlName="senha"
             [toggleMask]="true"
             [feedback]="false"
-            placeholder="Mínimo de 6 caracteres"
+            placeholder="Mínimo 8 caracteres"
             styleClass="full-width"
           />
+          <small class="hint">
+            Mínimo 8 caracteres, com pelo menos uma letra e um número.
+          </small>
         </div>
 
         @if (errorMessage()) {

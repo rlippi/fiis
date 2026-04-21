@@ -37,7 +37,15 @@ export class SignupComponent {
   protected readonly form = this.fb.nonNullable.group({
     nome: ['', [Validators.required, Validators.maxLength(100)]],
     email: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
-    senha: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(50)]]
+    senha: [
+      '',
+      [
+        Validators.required,
+        Validators.minLength(8),
+        Validators.maxLength(50),
+        Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d).+$/)
+      ]
+    ]
   });
 
   protected readonly loading = signal(false);
