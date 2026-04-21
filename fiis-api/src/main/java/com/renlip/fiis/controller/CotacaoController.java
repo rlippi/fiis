@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.renlip.fiis.domain.dto.CotacaoResponse;
+import com.renlip.fiis.domain.dto.ImportacaoBrapiResponse;
 import com.renlip.fiis.exception.ErroResponse;
 import com.renlip.fiis.service.CotacaoService;
 import com.renlip.fiis.domain.vo.CotacaoRequest;
@@ -169,5 +170,28 @@ public class CotacaoController {
             @PathVariable Long id) {
         cotacaoService.deletar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Importa cotações da BRAPI para todos os fundos ativos da carteira.
+     *
+     * <p>Uma única chamada HTTP à BRAPI cobre todos os tickers de uma vez.
+     * Comportamento upsert: atualiza se já existe cotação do dia, cria caso
+     * contrário.</p>
+     */
+    @PostMapping("/importar-brapi")
+    @Operation(
+        summary = "Importa cotações da BRAPI para a carteira",
+        description = "Busca na BRAPI as cotações do dia de todos os fundos ativos e faz upsert "
+            + "das cotações na data atual. Retorna um resumo com os totais processados."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Importação concluída"),
+        @ApiResponse(responseCode = "409",
+            description = "Carteira sem fundos ativos ou BRAPI indisponível",
+            content = @Content(schema = @Schema(implementation = ErroResponse.class)))
+    })
+    public ResponseEntity<ImportacaoBrapiResponse> importarBrapi() {
+        return ResponseEntity.ok(cotacaoService.importarViaBrapi());
     }
 }

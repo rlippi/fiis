@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
 import { CotacaoResponseDTO } from '../models/dto/cotacao-response.dto';
+import { ImportacaoBrapiResponseDTO } from '../models/dto/importacao-brapi-response.dto';
 import { CotacaoRequestVO } from '../models/vo/cotacao-request.vo';
 
 @Injectable({ providedIn: 'root' })
@@ -33,5 +34,9 @@ export class CotacaoService {
 
   deletar(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
+  importarBrapi(): Observable<ImportacaoBrapiResponseDTO> {
+    return this.http.post<ImportacaoBrapiResponseDTO>(`${this.baseUrl}/importar-brapi`, {});
   }
 }

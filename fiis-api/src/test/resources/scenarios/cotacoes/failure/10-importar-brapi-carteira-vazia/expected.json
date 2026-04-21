@@ -1,0 +1,7 @@
+{
+    "status": 409,
+    "erro": "Conflict",
+    "codigo": "FII0019",
+    "mensagem": "Nenhum fundo ativo na carteira para importar cotações",
+    "path": "/api/cotacoes/importar-brapi"
+}

@@ -1,13 +1,21 @@
 package com.renlip.fiis.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientException;
 
 import com.renlip.fiis.domain.dto.CotacaoResponse;
+import com.renlip.fiis.domain.dto.ImportacaoBrapiResponse;
+import com.renlip.fiis.domain.dto.brapi.BrapiQuote;
+import com.renlip.fiis.domain.dto.brapi.BrapiQuoteResponse;
 import com.renlip.fiis.domain.entity.Cotacao;
 import com.renlip.fiis.domain.entity.Fundo;
 import com.renlip.fiis.domain.enumeration.MensagemEnum;
@@ -17,6 +25,7 @@ import com.renlip.fiis.exception.RecursoNaoEncontradoException;
 import com.renlip.fiis.exception.RegraNegocioException;
 import com.renlip.fiis.repository.CotacaoRepository;
 import com.renlip.fiis.repository.FundoRepository;
+import com.renlip.fiis.support.BrapiClient;
 
 import lombok.RequiredArgsConstructor;
 
@@ -40,6 +49,7 @@ public class CotacaoService {
     private final CotacaoRepository cotacaoRepository;
     private final FundoRepository fundoRepository;
     private final CotacaoMapper cotacaoMapper;
+    private final BrapiClient brapiClient;
 
     /**
      * Lista todas as cotações cadastradas.
@@ -164,6 +174,79 @@ public class CotacaoService {
     public void deletar(Long id) {
         Cotacao cotacao = obterEntidade(id);
         cotacaoRepository.delete(cotacao);
+    }
+
+    /**
+     * Importa cotações da BRAPI para todos os fundos ativos da carteira, na
+     * data de hoje. Uma chamada HTTP cobre todos os tickers de uma vez.
+     *
+     * <p>Comportamento de upsert: se já existe cotação do fundo para hoje,
+     * os preços são atualizados com os valores mais recentes da BRAPI. Se não
+     * existe, uma nova cotação é criada.</p>
+     *
+     * @return resumo com totais de criados, atualizados e tickers não encontrados
+     * @throws RegraNegocioException se a carteira não tiver fundos ativos ou
+     *                               se a BRAPI estiver indisponível
+     */
+    @Transactional
+    public ImportacaoBrapiResponse importarViaBrapi() {
+        List<Fundo> fundosAtivos = fundoRepository.findByAtivoTrue();
+        if (fundosAtivos.isEmpty()) {
+            throw new RegraNegocioException(MensagemEnum.CARTEIRA_SEM_FUNDOS_ATIVOS);
+        }
+
+        List<String> tickers = fundosAtivos.stream().map(Fundo::getTicker).toList();
+
+        BrapiQuoteResponse resposta;
+        try {
+            resposta = brapiClient.buscarCotacoes(tickers);
+        } catch (RestClientException ex) {
+            throw new RegraNegocioException(MensagemEnum.COTACAO_BRAPI_INDISPONIVEL);
+        }
+
+        Map<String, Fundo> fundosPorTicker = new HashMap<>();
+        fundosAtivos.forEach(f -> fundosPorTicker.put(f.getTicker(), f));
+
+        List<String> naoEncontrados = new ArrayList<>(tickers);
+        LocalDate hoje = LocalDate.now();
+        int criados = 0;
+        int atualizados = 0;
+
+        List<BrapiQuote> results = resposta == null || resposta.results() == null
+            ? List.of()
+            : resposta.results();
+
+        for (BrapiQuote quote : results) {
+            Fundo fundo = fundosPorTicker.get(quote.symbol());
+            if (fundo == null || quote.regularMarketPrice() == null) {
+                continue;
+            }
+            naoEncontrados.remove(quote.symbol());
+
+            Optional<Cotacao> existente =
+                cotacaoRepository.findByFundoIdAndData(fundo.getId(), hoje);
+
+            Cotacao cotacao = existente.orElseGet(() -> Cotacao.builder()
+                .fundo(fundo)
+                .data(hoje)
+                .build());
+
+            cotacao.setPrecoFechamento(quote.regularMarketPrice());
+            cotacao.setPrecoAbertura(quote.regularMarketOpen());
+            cotacao.setPrecoMinimo(quote.regularMarketDayLow());
+            cotacao.setPrecoMaximo(quote.regularMarketDayHigh());
+            cotacao.setVolume(quote.regularMarketVolume());
+
+            cotacaoRepository.save(cotacao);
+            if (existente.isPresent()) {
+                atualizados++;
+            } else {
+                criados++;
+            }
+        }
+
+        return new ImportacaoBrapiResponse(
+            fundosAtivos.size(), criados, atualizados, naoEncontrados);
     }
 
     /**

@@ -59,6 +59,13 @@ fiis:
     ttl-millis: 86400000
     issuer: fiis-api
 
+# BRAPI - integração com cotações do mercado (https://brapi.dev)
+# token é opcional: free tier funciona sem autenticação. Se preenchido, é
+# enviado como query string para usar o rate limit do plano pago.
+brapi:
+  url: ${BRAPI_URL:https://brapi.dev}
+  token: ${BRAPI_TOKEN:}
+
 # Swagger UI - ordenação alfabética das tags (deixa "Autenticação" no topo)
 springdoc:
   swagger-ui:

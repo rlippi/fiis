@@ -4,11 +4,21 @@
       <h1 class="title">Cotações</h1>
     </ng-template>
     <ng-template #end>
-      <p-button
-        label="Nova cotação"
-        icon="pi pi-plus"
-        [routerLink]="['/cotacoes', 'novo']"
-      />
+      <div class="toolbar-actions">
+        <p-button
+          label="Atualizar carteira"
+          icon="pi pi-sync"
+          severity="secondary"
+          [outlined]="true"
+          [loading]="importando()"
+          (onClick)="atualizarCarteira()"
+        />
+        <p-button
+          label="Nova cotação"
+          icon="pi pi-plus"
+          [routerLink]="['/cotacoes', 'novo']"
+        />
+      </div>
     </ng-template>
   </p-toolbar>
 
