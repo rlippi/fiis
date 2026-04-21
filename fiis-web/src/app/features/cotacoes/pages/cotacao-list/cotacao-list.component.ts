@@ -41,6 +41,7 @@ export class CotacaoListComponent implements OnInit {
 
   protected readonly cotacoes = signal<CotacaoResponseDTO[]>([]);
   protected readonly loading = signal(false);
+  protected readonly importando = signal(false);
   protected readonly globalFilter = signal('');
 
   ngOnInit(): void {
@@ -89,6 +90,59 @@ export class CotacaoListComponent implements OnInit {
       },
       error: (err) => {
         this.errorService.showToast(err, 'Erro ao excluir');
+      }
+    });
+  }
+
+  atualizarCarteira(): void {
+    if (this.importando()) {
+      return;
+    }
+    this.importando.set(true);
+    this.cotacaoService.importarBrapi().subscribe({
+      next: (resumo) => {
+        this.importando.set(false);
+
+        const mudancas = resumo.criados + resumo.atualizados;
+        if (mudancas === 0 && resumo.totalFundos === 0) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Carteira vazia',
+            detail: 'Nenhum fundo ativo encontrado para atualizar.'
+          });
+          return;
+        }
+
+        const detalhePartes: string[] = [];
+        if (resumo.criados > 0) {
+          detalhePartes.push(`${resumo.criados} criada${resumo.criados > 1 ? 's' : ''}`);
+        }
+        if (resumo.atualizados > 0) {
+          detalhePartes.push(`${resumo.atualizados} atualizada${resumo.atualizados > 1 ? 's' : ''}`);
+        }
+        const detalhe = detalhePartes.length > 0
+          ? `${detalhePartes.join(', ')} de ${resumo.totalFundos} fundo${resumo.totalFundos > 1 ? 's' : ''}.`
+          : `${resumo.totalFundos} fundo${resumo.totalFundos > 1 ? 's' : ''} processado${resumo.totalFundos > 1 ? 's' : ''}.`;
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Cotações atualizadas',
+          detail: detalhe
+        });
+
+        if (resumo.naoEncontradosBrapi.length > 0) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Tickers não encontrados na BRAPI',
+            detail: resumo.naoEncontradosBrapi.join(', ')
+          });
+        }
+
+        this.carregar();
+      },
+      error: (err) => {
+        this.importando.set(false);
+        this.errorService.showToast(err, 'Erro ao importar cotações');
       }
     });
   }
