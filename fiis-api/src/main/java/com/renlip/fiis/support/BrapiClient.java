@@ -3,6 +3,8 @@ package com.renlip.fiis.support;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
@@ -33,6 +35,8 @@ import com.renlip.fiis.domain.dto.brapi.BrapiQuoteResponse;
 @Component
 public class BrapiClient {
 
+    private static final Logger log = LoggerFactory.getLogger(BrapiClient.class);
+
     private final BrapiProperties properties;
 
     private final RestClient restClient;
@@ -48,10 +52,10 @@ public class BrapiClient {
      * Busca na BRAPI a cotação atual de múltiplos tickers.
      *
      * <p>Itera sobre a lista e faz uma requisição por ticker (exigência do
-     * plano gratuito). Tickers que a BRAPI não reconhece (HTTP 404) são
-     * ignorados silenciosamente — o serviço chamador reporta esses casos em
-     * {@code naoEncontradosBrapi}. Qualquer outra falha (5xx, timeout,
-     * conexão recusada) propaga como {@code RestClientException}.</p>
+     * plano gratuito). Qualquer resposta 4xx para um ticker específico é
+     * logada e ignorada — o serviço chamador reporta esses casos em
+     * {@code naoEncontradosBrapi}. Falhas 5xx, timeouts e erros de conexão
+     * propagam como {@code RestClientException} e interrompem o processamento.</p>
      *
      * @param tickers lista de códigos de negociação (ex: {@code ["HGLG11", "KNCR11"]})
      * @return envelope com as cotações encontradas (subset dos tickers solicitados)
@@ -75,9 +79,13 @@ public class BrapiClient {
                 if (resposta != null && resposta.results() != null) {
                     encontradas.addAll(resposta.results());
                 }
-            } catch (HttpClientErrorException.NotFound ex) {
-                // Ticker inexistente na BRAPI — ignora; o serviço tratará como
-                // "não encontrado" ao comparar a lista consolidada com a original.
+            } catch (HttpClientErrorException ex) {
+                // Qualquer 4xx para um ticker específico significa "esse ticker
+                // não está disponível agora" — 404 (inexistente), 400 (formato
+                // inválido), 402 (excedeu quota), etc. O service reportará o
+                // ticker em naoEncontradosBrapi ao comparar com a lista original.
+                log.warn("BRAPI rejeitou ticker {} com status {}: {}",
+                    ticker, ex.getStatusCode(), ex.getResponseBodyAsString());
             }
         }
 
