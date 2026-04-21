@@ -13,10 +13,14 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -37,7 +41,13 @@ import lombok.Setter;
  * @see Segmento
  */
 @Entity
-@Table(name = "fundo")
+@Table(
+    name = "fundo",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_fundo_usuario_ticker",
+        columnNames = {"usuario_id", "ticker"}
+    )
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -59,10 +69,19 @@ public class Fundo {
     private Long id;
 
     /**
-     * Código de negociação do fundo na B3 (ex: "HGLG11", "MXRF11").
-     * Único no banco — não pode haver dois fundos com o mesmo ticker.
+     * Usuário dono deste fundo. Cada usuário tem sua própria carteira isolada:
+     * dois usuários distintos podem cadastrar o mesmo ticker (ex: HGLG11) sem conflito.
      */
-    @Column(nullable = false, unique = true, length = 10)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    @Schema(description = "Usuário dono do fundo", accessMode = Schema.AccessMode.READ_ONLY)
+    private Usuario usuario;
+
+    /**
+     * Código de negociação do fundo na B3 (ex: "HGLG11", "MXRF11").
+     * Único por usuário — a combinação {@code (usuario_id, ticker)} é única.
+     */
+    @Column(nullable = false, length = 10)
     @Schema(description = "Ticker do fundo na B3", example = "HGLG11", maxLength = 10)
     private String ticker;
 

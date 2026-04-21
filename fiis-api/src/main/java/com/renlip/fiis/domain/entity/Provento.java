@@ -58,6 +58,14 @@ public class Provento {
     private Long id;
 
     /**
+     * Usuário dono deste provento (carteira isolada por usuário).
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    @Schema(description = "Usuário dono do provento", accessMode = Schema.AccessMode.READ_ONLY)
+    private Usuario usuario;
+
+    /**
      * Fundo pagador do provento.
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

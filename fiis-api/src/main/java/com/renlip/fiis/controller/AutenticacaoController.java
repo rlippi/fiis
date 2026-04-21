@@ -1,5 +1,6 @@
 package com.renlip.fiis.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.renlip.fiis.domain.dto.TokenResponse;
 import com.renlip.fiis.domain.vo.CredencialVO;
+import com.renlip.fiis.domain.vo.SignupVO;
 import com.renlip.fiis.service.AutenticacaoService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,5 +39,12 @@ public class AutenticacaoController {
         description = "Recebe e-mail e senha. Retorna um token JWT a ser usado no header Authorization dos demais endpoints.")
     public ResponseEntity<TokenResponse> login(@Valid @RequestBody final CredencialVO credencial) {
         return ResponseEntity.ok(autenticacaoService.login(credencial));
+    }
+
+    @PostMapping(path = "/signup", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Cria uma nova conta e retorna um token JWT",
+        description = "Cadastra um novo usuário com perfil USER e devolve um token JWT já autenticado (auto-login após cadastro).")
+    public ResponseEntity<TokenResponse> signup(@Valid @RequestBody final SignupVO signup) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(autenticacaoService.signup(signup));
     }
 }

@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,6 +32,7 @@ import com.renlip.fiis.util.JsonUtils;
  */
 @WithAnonymousUser
 @DisplayName("AutenticacaoController")
+@Sql(value = "/fixtures/setup.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
 class AutenticacaoControllerTests extends AbstractControllerTests {
 
     private static final String SENHA_VALIDA = "senha123";
@@ -141,6 +144,71 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
                 restTestClient.post("/api/auth/login", body)
                     .expectStatus(HttpStatus.UNAUTHORIZED)
                     .expectBody("scenarios/auth/failure/05-usuario-inativo/expected.json");
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/auth/signup")
+    class Signup {
+
+        @Nested
+        @DisplayName("cenários de sucesso")
+        class SignupSuccess {
+
+            @Test
+            @DisplayName("[201 Created] cadastra usuário e retorna token JWT pronto para uso")
+            void testSignupComSucesso() throws Exception {
+                String body = JsonUtils.readFile("scenarios/auth/signup/success/01-signup-sucesso/actual.json");
+
+                String json = new String(
+                    restTestClient.post("/api/auth/signup", body)
+                        .expectStatus(HttpStatus.CREATED)
+                        .getResult()
+                        .getResponse()
+                        .getContentAsByteArray(),
+                    StandardCharsets.UTF_8);
+
+                JsonNode response = objectMapper.readTree(json);
+                assertThat(response.get("token").asText()).isNotBlank();
+                assertThat(response.get("tipo").asText()).isEqualTo("Bearer");
+                assertThat(response.get("nome").asText()).isEqualTo("Novo Usuário");
+                assertThat(response.get("perfil").asText()).isEqualTo("USER");
+                assertThat(response.get("expiraEmMs").asLong()).isPositive();
+
+                assertThat(usuarioRepository.findByEmail("novo@fiis.com")).isPresent();
+            }
+        }
+
+        @Nested
+        @DisplayName("cenários de falha")
+        class SignupFailure {
+
+            @Test
+            @DisplayName("[409 Conflict] quando o e-mail já está cadastrado")
+            void testSignupEmailDuplicado() throws IOException {
+                String body = JsonUtils.readFile("scenarios/auth/signup/failure/01-email-ja-cadastrado/actual.json");
+                restTestClient.post("/api/auth/signup", body)
+                    .expectStatus(HttpStatus.CONFLICT)
+                    .expectBody("scenarios/auth/signup/failure/01-email-ja-cadastrado/expected.json");
+            }
+
+            @Test
+            @DisplayName("[400 Bad Request] quando a senha tem menos que 6 caracteres")
+            void testSignupSenhaCurta() throws IOException {
+                String body = JsonUtils.readFile("scenarios/auth/signup/failure/02-senha-curta/actual.json");
+                restTestClient.post("/api/auth/signup", body)
+                    .expectStatus(HttpStatus.BAD_REQUEST)
+                    .expectBody("scenarios/auth/signup/failure/02-senha-curta/expected.json");
+            }
+
+            @Test
+            @DisplayName("[400 Bad Request] quando campos obrigatórios estão em branco")
+            void testSignupCamposObrigatorios() throws IOException {
+                String body = JsonUtils.readFile("scenarios/auth/signup/failure/03-campos-obrigatorios/actual.json");
+                restTestClient.post("/api/auth/signup", body)
+                    .expectStatus(HttpStatus.BAD_REQUEST)
+                    .expectBody("scenarios/auth/signup/failure/03-campos-obrigatorios/expected.json");
             }
         }
     }
