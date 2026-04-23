@@ -26,6 +26,7 @@
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
         <jjwt.version>0.12.6</jjwt.version>
         <bucket4j.version>8.10.1</bucket4j.version>
+        <greenmail-junit5.version>2.1.7</greenmail-junit5.version>
     </properties>
 
     <dependencies>
@@ -98,6 +99,18 @@
             <version>${bucket4j.version}</version>
         </dependency>
 
+        <!-- Mail: envio de emails via SMTP (usado pelo fluxo de "esqueci minha senha") -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <!-- Thymeleaf: template engine para o corpo HTML dos emails transacionais -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
         <!-- Lombok: evita boilerplate (getters, setters, constructors) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -132,6 +145,14 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Teste: GreenMail — servidor SMTP in-memory para testes de envio de email -->
+        <dependency>
+            <groupId>com.icegreen</groupId>
+            <artifactId>greenmail-junit5</artifactId>
+            <version>${greenmail-junit5.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

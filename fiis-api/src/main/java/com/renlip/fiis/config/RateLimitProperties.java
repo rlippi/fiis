@@ -15,7 +15,8 @@ import jakarta.validation.constraints.NotNull;
  * <p><b>Escolha de chave por endpoint:</b>
  * <ul>
  *   <li>{@code login}: por e-mail — protege contra brute force em uma conta específica;</li>
- *   <li>{@code signup}: por IP — evita criação massiva de contas por bots.</li>
+ *   <li>{@code signup}: por IP — evita criação massiva de contas por bots;</li>
+ *   <li>{@code forgotPassword}: por e-mail — evita flood de emails de reset para a mesma conta.</li>
  * </ul>
  *
  * <p>Storage in-memory é suficiente para o deploy atual (1 instância no Render
@@ -26,7 +27,8 @@ import jakarta.validation.constraints.NotNull;
 public record RateLimitProperties(
 
     @NotNull Limite login,
-    @NotNull Limite signup
+    @NotNull Limite signup,
+    @NotNull Limite forgotPassword
 ) {
 
     /**

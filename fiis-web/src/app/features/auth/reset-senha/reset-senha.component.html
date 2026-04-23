@@ -1,0 +1,99 @@
+<div class="auth-page">
+  <div class="theme-toggle">
+    <p-button
+      [icon]="themeIcon"
+      (onClick)="cycleTheme()"
+      [rounded]="true"
+      [text]="true"
+      severity="secondary"
+      [ariaLabel]="'Alternar tema (atual: ' + themeMode() + ')'"
+    />
+  </div>
+
+  <div class="auth-shell">
+    <header class="auth-header">
+      <h1>FIIs</h1>
+      <p>Escolha sua nova senha</p>
+    </header>
+
+    <p-card>
+      @if (tokenAusente()) {
+        <div class="feedback">
+          <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+          <h2>Link inválido</h2>
+          <p>
+            O link que você usou não contém um token de redefinição.
+            Solicite um novo email na tela de "Esqueci minha senha".
+          </p>
+          <p-button
+            label="Ir para Esqueci minha senha"
+            icon="pi pi-arrow-right"
+            [text]="true"
+            severity="secondary"
+            routerLink="/esqueci-senha"
+          />
+        </div>
+      } @else if (!concluido()) {
+        <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+          <div class="field">
+            <label for="novaSenha">Nova senha</label>
+            <p-password
+              inputId="novaSenha"
+              formControlName="novaSenha"
+              [toggleMask]="true"
+              [feedback]="false"
+              placeholder="Mínimo 8 caracteres"
+              styleClass="full-width"
+            />
+            <small class="hint">
+              Mínimo 8 caracteres, com pelo menos uma letra e um número.
+            </small>
+          </div>
+
+          <div class="field">
+            <label for="confirmacao">Confirme a nova senha</label>
+            <p-password
+              inputId="confirmacao"
+              formControlName="confirmacao"
+              [toggleMask]="true"
+              [feedback]="false"
+              placeholder="Repita a senha"
+              styleClass="full-width"
+            />
+          </div>
+
+          @if (errorMessage()) {
+            <p-message severity="error" [text]="errorMessage()!" />
+          }
+
+          <p-button
+            type="submit"
+            label="Redefinir senha"
+            icon="pi pi-check"
+            [loading]="loading()"
+            [disabled]="form.invalid"
+            styleClass="submit-button"
+          />
+
+          <p class="back-link">
+            <a routerLink="/login">Voltar para o login</a>
+          </p>
+        </form>
+      } @else {
+        <div class="feedback">
+          <i class="pi pi-check-circle" aria-hidden="true"></i>
+          <h2>Senha redefinida</h2>
+          <p>
+            Sua senha foi atualizada. Você será redirecionado para a tela de
+            login em alguns segundos.
+          </p>
+          <p-button
+            label="Ir para o login agora"
+            icon="pi pi-sign-in"
+            routerLink="/login"
+          />
+        </div>
+      }
+    </p-card>
+  </div>
+</div>

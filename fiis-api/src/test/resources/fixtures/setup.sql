@@ -104,6 +104,16 @@ CREATE TABLE IF NOT EXISTS evento_corporativo (
     data_atualizacao    TIMESTAMP     NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS reset_token (
+    id                  BIGSERIAL PRIMARY KEY,
+    usuario_id          BIGINT        NOT NULL REFERENCES usuario (id),
+    token               VARCHAR(64)   NOT NULL UNIQUE,
+    expires_at          TIMESTAMP     NOT NULL,
+    used_at             TIMESTAMP,
+    data_criacao        TIMESTAMP     NOT NULL,
+    data_atualizacao    TIMESTAMP     NOT NULL
+);
+
 
 -- ============================================
 -- RESET — Limpa todas as tabelas e reinicia as sequências de IDs
@@ -118,6 +128,7 @@ TRUNCATE TABLE
     cotacao,
     evento_corporativo,
     fundo,
+    reset_token,
     usuario
 RESTART IDENTITY CASCADE;
 

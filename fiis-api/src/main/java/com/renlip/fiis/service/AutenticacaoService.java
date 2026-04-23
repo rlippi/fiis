@@ -1,5 +1,8 @@
 package com.renlip.fiis.service;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -8,14 +11,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.renlip.fiis.config.ResetTokenProperties;
 import com.renlip.fiis.config.security.JwtUserDetails;
 import com.renlip.fiis.domain.dto.TokenResponse;
+import com.renlip.fiis.domain.entity.ResetToken;
 import com.renlip.fiis.domain.entity.Usuario;
 import com.renlip.fiis.domain.enumeration.MensagemEnum;
 import com.renlip.fiis.domain.enumeration.Perfil;
 import com.renlip.fiis.domain.vo.CredencialVO;
+import com.renlip.fiis.domain.vo.EsqueciSenhaVO;
+import com.renlip.fiis.domain.vo.ResetSenhaVO;
 import com.renlip.fiis.domain.vo.SignupVO;
 import com.renlip.fiis.exception.RegraNegocioException;
+import com.renlip.fiis.repository.ResetTokenRepository;
 import com.renlip.fiis.repository.UsuarioRepository;
 import com.renlip.fiis.support.JwtSupport;
 import com.renlip.fiis.support.RateLimitSupport;
@@ -44,6 +52,12 @@ public class AutenticacaoService {
     private final PasswordEncoder passwordEncoder;
 
     private final RateLimitSupport rateLimit;
+
+    private final ResetTokenRepository resetTokenRepository;
+
+    private final ResetTokenProperties resetTokenProperties;
+
+    private final EmailService emailService;
 
     @Value("${fiis.jwt.ttl-millis}")
     private long ttlMillis;
@@ -121,5 +135,60 @@ public class AutenticacaoService {
             salvo.getPerfil(),
             ttlMillis
         );
+    }
+
+    /**
+     * Inicia o fluxo de "esqueci minha senha".
+     *
+     * <p>Consome 1 token do bucket por e-mail (rate limit) e, se o e-mail
+     * pertencer a um usuário ativo, gera um novo {@link ResetToken},
+     * invalida quaisquer tokens anteriores ainda válidos do mesmo usuário e
+     * dispara o email de redefinição. <b>A resposta é sempre a mesma</b> (o
+     * controller devolve 200), existindo ou não o e-mail — evita enumeração
+     * de contas cadastradas.</p>
+     */
+    @Transactional
+    public void forgotPassword(final EsqueciSenhaVO esqueci) {
+        rateLimit.consumirForgotPassword(esqueci.email());
+
+        usuarioRepository.findByEmail(esqueci.email())
+            .filter(Usuario::getAtivo)
+            .ifPresent(this::emitirTokenEEnviarEmail);
+    }
+
+    /**
+     * Conclui o fluxo: valida o token e troca a senha.
+     *
+     * @throws RegraNegocioException (FII0023) se o token não existir,
+     *         estiver expirado ou já tiver sido consumido
+     */
+    @Transactional
+    public void resetPassword(final ResetSenhaVO reset) {
+        ResetToken token = resetTokenRepository.findByToken(reset.token())
+            .filter(ResetToken::isValido)
+            .orElseThrow(() -> new RegraNegocioException(MensagemEnum.TOKEN_RESET_INVALIDO));
+
+        Usuario usuario = token.getUsuario();
+        usuario.setSenha(passwordEncoder.encode(reset.novaSenha()));
+        usuarioRepository.save(usuario);
+
+        token.marcarComoUsado();
+        resetTokenRepository.save(token);
+    }
+
+    private void emitirTokenEEnviarEmail(final Usuario usuario) {
+        LocalDateTime agora = LocalDateTime.now();
+        resetTokenRepository.invalidarTokensAtivos(usuario.getId(), agora);
+
+        long ttl = resetTokenProperties.ttlMinutos();
+        ResetToken novo = ResetToken.builder()
+            .usuario(usuario)
+            .token(UUID.randomUUID().toString())
+            .expiresAt(agora.plusMinutes(ttl))
+            .build();
+        novo = resetTokenRepository.save(novo);
+
+        emailService.enviarResetSenha(usuario.getEmail(), usuario.getNome(),
+            novo.getToken(), ttl);
     }
 }
