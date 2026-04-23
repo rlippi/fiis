@@ -36,6 +36,11 @@ export class ErrorService {
       return err.error?.mensagem ?? 'Recurso não encontrado.';
     }
 
+    if (err.status === 429) {
+      return err.error?.mensagem
+        ?? 'Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.';
+    }
+
     if (err.status === 502 || err.status === 503 || err.status === 504) {
       return 'Servidor reiniciando (cold start). Tente novamente em alguns segundos.';
     }

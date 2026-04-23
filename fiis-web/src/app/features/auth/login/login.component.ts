@@ -83,6 +83,10 @@ export class LoginComponent {
     if (err.status === 401) {
       return 'E-mail ou senha invalidos.';
     }
+    if (err.status === 429) {
+      return err.error?.mensagem
+        ?? 'Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.';
+    }
     if (err.status === 0) {
       return 'Nao foi possivel conectar a API. Verifique sua conexao.';
     }

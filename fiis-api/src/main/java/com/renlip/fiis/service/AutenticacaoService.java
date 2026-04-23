@@ -18,6 +18,7 @@ import com.renlip.fiis.domain.vo.SignupVO;
 import com.renlip.fiis.exception.RegraNegocioException;
 import com.renlip.fiis.repository.UsuarioRepository;
 import com.renlip.fiis.support.JwtSupport;
+import com.renlip.fiis.support.RateLimitSupport;
 
 import lombok.RequiredArgsConstructor;
 
@@ -42,16 +43,24 @@ public class AutenticacaoService {
 
     private final PasswordEncoder passwordEncoder;
 
+    private final RateLimitSupport rateLimit;
+
     @Value("${fiis.jwt.ttl-millis}")
     private long ttlMillis;
 
     /**
      * Autentica as credenciais e devolve um token JWT pronto para uso.
      *
+     * <p>Cada tentativa (válida ou não) consome 1 token do bucket associado ao
+     * e-mail; se o limite for excedido, dispara HTTP 429 antes mesmo de validar
+     * a senha. Impede brute force em uma conta específica.</p>
+     *
      * @param credencial e-mail e senha
      * @return {@link TokenResponse} com o token e metadados
      */
     public TokenResponse login(final CredencialVO credencial) {
+        rateLimit.consumirLogin(credencial.email());
+
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(credencial.email(), credencial.senha()));
 
@@ -75,12 +84,19 @@ public class AutenticacaoService {
      *
      * <p><b>Regra de negócio:</b> e-mail deve ser único no banco.</p>
      *
+     * <p>Cada chamada consome 1 token do bucket associado ao IP do cliente; se
+     * o limite for excedido, dispara HTTP 429. Impede que bots criem contas em
+     * massa a partir de um mesmo IP.</p>
+     *
      * @param signup dados do novo usuário
+     * @param ip     IP do cliente, usado como chave do rate limit
      * @return {@link TokenResponse} com o token JWT do usuário recém-criado
      * @throws RegraNegocioException se já existir usuário com o e-mail informado
      */
     @Transactional
-    public TokenResponse signup(final SignupVO signup) {
+    public TokenResponse signup(final SignupVO signup, final String ip) {
+        rateLimit.consumirSignup(ip);
+
         if (usuarioRepository.existsByEmail(signup.email())) {
             throw new RegraNegocioException(MensagemEnum.EMAIL_JA_CADASTRADO, signup.email());
         }

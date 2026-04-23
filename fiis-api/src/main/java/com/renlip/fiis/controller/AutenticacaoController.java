@@ -16,6 +16,7 @@ import com.renlip.fiis.service.AutenticacaoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -44,7 +45,25 @@ public class AutenticacaoController {
     @PostMapping(path = "/signup", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria uma nova conta e retorna um token JWT",
         description = "Cadastra um novo usuário com perfil USER e devolve um token JWT já autenticado (auto-login após cadastro).")
-    public ResponseEntity<TokenResponse> signup(@Valid @RequestBody final SignupVO signup) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(autenticacaoService.signup(signup));
+    public ResponseEntity<TokenResponse> signup(
+            @Valid @RequestBody final SignupVO signup,
+            final HttpServletRequest request) {
+        String ip = extrairIpCliente(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(autenticacaoService.signup(signup, ip));
+    }
+
+    /**
+     * Extrai o IP real do cliente respeitando proxy reverso. Render e Vercel
+     * colocam o IP original no header {@code X-Forwarded-For} (lista separada
+     * por vírgulas; o primeiro item é o cliente). Quando ausente, usa o
+     * endereço remoto direto.
+     */
+    private String extrairIpCliente(final HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            int virgula = forwardedFor.indexOf(',');
+            return (virgula > 0 ? forwardedFor.substring(0, virgula) : forwardedFor).trim();
+        }
+        return request.getRemoteAddr();
     }
 }
