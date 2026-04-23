@@ -1,0 +1,80 @@
+<div class="auth-page">
+  <div class="theme-toggle">
+    <p-button
+      [icon]="themeIcon"
+      (onClick)="cycleTheme()"
+      [rounded]="true"
+      [text]="true"
+      severity="secondary"
+      [ariaLabel]="'Alternar tema (atual: ' + themeMode() + ')'"
+    />
+  </div>
+
+  <div class="auth-shell">
+    <header class="auth-header">
+      <h1>FIIs</h1>
+      <p>Recuperar acesso à sua conta</p>
+    </header>
+
+    <p-card>
+      @if (!enviado()) {
+        <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+          <p class="hint">
+            Informe o e-mail cadastrado e enviaremos um link para você redefinir
+            sua senha.
+          </p>
+
+          <div class="field">
+            <label for="email">E-mail</label>
+            <input
+              pInputText
+              id="email"
+              type="email"
+              formControlName="email"
+              placeholder="seu@email.com"
+              autocomplete="email"
+              maxlength="150"
+            />
+          </div>
+
+          @if (errorMessage()) {
+            <p-message severity="error" [text]="errorMessage()!" />
+          }
+
+          <p-button
+            type="submit"
+            label="Enviar link"
+            icon="pi pi-envelope"
+            [loading]="loading()"
+            [disabled]="form.invalid"
+            styleClass="submit-button"
+          />
+
+          <p class="back-link">
+            <a routerLink="/login">Voltar para o login</a>
+          </p>
+        </form>
+      } @else {
+        <div class="enviado">
+          <i class="pi pi-check-circle" aria-hidden="true"></i>
+          <h2>Verifique seu e-mail</h2>
+          <p>
+            Se o endereço informado estiver cadastrado, você receberá em poucos
+            minutos um e-mail com as instruções para redefinir sua senha.
+          </p>
+          <p class="muted">
+            Não recebeu? Confira a caixa de spam ou tente novamente em alguns instantes.
+          </p>
+
+          <p-button
+            label="Voltar para o login"
+            icon="pi pi-arrow-left"
+            [text]="true"
+            severity="secondary"
+            routerLink="/login"
+          />
+        </div>
+      }
+    </p-card>
+  </div>
+</div>

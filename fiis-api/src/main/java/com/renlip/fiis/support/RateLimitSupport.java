@@ -54,6 +54,17 @@ public class RateLimitSupport {
             properties.signup().duracaoMinutos());
     }
 
+    /**
+     * Consome 1 token do bucket de "esqueci minha senha" associado ao e-mail.
+     * Evita flood de emails de reset para a mesma conta.
+     *
+     * @param email e-mail do usuário (case-insensitive)
+     */
+    public void consumirForgotPassword(final String email) {
+        consumir("forgot:" + normalizar(email), properties.forgotPassword().capacidade(),
+            properties.forgotPassword().duracaoMinutos());
+    }
+
     private void consumir(final String chave, final int capacidade, final long duracaoMinutos) {
         Bucket bucket = buckets.computeIfAbsent(chave, k -> novoBucket(capacidade, duracaoMinutos));
         if (!bucket.tryConsume(1)) {

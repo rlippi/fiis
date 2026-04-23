@@ -21,6 +21,22 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'esqueci-senha',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/esqueci-senha/esqueci-senha.component').then(
+        (m) => m.EsqueciSenhaComponent
+      )
+  },
+  {
+    path: 'reset-senha',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/reset-senha/reset-senha.component').then(
+        (m) => m.ResetSenhaComponent
+      )
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () =>

@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.renlip.fiis.domain.dto.TokenResponse;
 import com.renlip.fiis.domain.vo.CredencialVO;
+import com.renlip.fiis.domain.vo.EsqueciSenhaVO;
+import com.renlip.fiis.domain.vo.ResetSenhaVO;
 import com.renlip.fiis.domain.vo.SignupVO;
 import com.renlip.fiis.service.AutenticacaoService;
 
@@ -50,6 +52,24 @@ public class AutenticacaoController {
             final HttpServletRequest request) {
         String ip = extrairIpCliente(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(autenticacaoService.signup(signup, ip));
+    }
+
+    @PostMapping(path = "/forgot-password", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Envia email de redefinição de senha",
+        description = "Se o e-mail pertencer a uma conta ativa, um link de redefinição é enviado. "
+            + "A resposta é sempre 204 No Content para não revelar quais e-mails estão cadastrados.")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody final EsqueciSenhaVO esqueci) {
+        autenticacaoService.forgotPassword(esqueci);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(path = "/reset-password", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Troca a senha a partir de um token válido",
+        description = "Consome o token recebido por email e aplica a nova senha. "
+            + "A política de senha forte (mínimo 8 caracteres com letra e número) é aplicada.")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody final ResetSenhaVO reset) {
+        autenticacaoService.resetPassword(reset);
+        return ResponseEntity.noContent().build();
     }
 
     /**

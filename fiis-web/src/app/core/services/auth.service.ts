@@ -5,6 +5,8 @@ import { Observable, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { CredencialVO } from '../models/vo/credencial.vo';
+import { EsqueciSenhaVO } from '../models/vo/esqueci-senha.vo';
+import { ResetSenhaVO } from '../models/vo/reset-senha.vo';
 import { SignupVO } from '../models/vo/signup.vo';
 import { TokenResponse } from '../models/dto/token-response.dto';
 import { Perfil } from '../models/enumeration/perfil.enum';
@@ -40,6 +42,28 @@ export class AuthService {
     return this.http
       .post<TokenResponse>(`${environment.apiUrl}/api/auth/signup`, signup)
       .pipe(tap((response) => this.persistSession(response)));
+  }
+
+  /**
+   * Solicita um email de redefinição de senha. A API responde 204 independente
+   * do e-mail existir ou não (evita enumeração de contas).
+   */
+  forgotPassword(payload: EsqueciSenhaVO): Observable<void> {
+    return this.http.post<void>(
+      `${environment.apiUrl}/api/auth/forgot-password`,
+      payload
+    );
+  }
+
+  /**
+   * Consome o token recebido por email e troca a senha do usuário.
+   * Não faz auto-login: o usuário é redirecionado para a tela de login.
+   */
+  resetPassword(payload: ResetSenhaVO): Observable<void> {
+    return this.http.post<void>(
+      `${environment.apiUrl}/api/auth/reset-password`,
+      payload
+    );
   }
 
   logout(): void {
