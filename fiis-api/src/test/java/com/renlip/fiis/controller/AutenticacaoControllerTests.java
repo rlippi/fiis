@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renlip.fiis.domain.entity.Usuario;
 import com.renlip.fiis.domain.enumeration.Perfil;
 import com.renlip.fiis.repository.UsuarioRepository;
+import com.renlip.fiis.support.RateLimitSupport;
 import com.renlip.fiis.util.JsonUtils;
 
 /**
@@ -48,8 +49,12 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private RateLimitSupport rateLimit;
+
     @BeforeEach
     void prepararUsuariosDeTeste() {
+        rateLimit.limpar();
         usuarioRepository.deleteAll();
         usuarioRepository.save(Usuario.builder()
             .email(EMAIL_ATIVO)
@@ -145,6 +150,21 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
                     .expectStatus(HttpStatus.UNAUTHORIZED)
                     .expectBody("scenarios/auth/failure/05-usuario-inativo/expected.json");
             }
+
+            @Test
+            @DisplayName("[429 Too Many Requests] após 5 tentativas com senha errada, a 6ª é bloqueada por rate limit")
+            void testRateLimitLogin() throws IOException {
+                String body = JsonUtils.readFile("scenarios/auth/failure/01-senha-errada/actual.json");
+
+                for (int i = 0; i < 5; i++) {
+                    restTestClient.post("/api/auth/login", body)
+                        .expectStatus(HttpStatus.UNAUTHORIZED);
+                }
+
+                restTestClient.post("/api/auth/login", body)
+                    .expectStatus(HttpStatus.TOO_MANY_REQUESTS)
+                    .expectBody("scenarios/auth/failure/07-rate-limit-login/expected.json");
+            }
         }
     }
 
@@ -227,6 +247,33 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
                 restTestClient.post("/api/auth/signup", body)
                     .expectStatus(HttpStatus.BAD_REQUEST)
                     .expectBody("scenarios/auth/signup/failure/05-senha-sem-numero/expected.json");
+            }
+
+            @Test
+            @DisplayName("[429 Too Many Requests] após 3 cadastros do mesmo IP, o 4º é bloqueado por rate limit")
+            void testRateLimitSignup() {
+                for (int i = 0; i < 3; i++) {
+                    String body = """
+                        {
+                            "nome": "Novo Usuário %d",
+                            "email": "signup-rl-%d@fiis.com",
+                            "senha": "senha123"
+                        }
+                        """.formatted(i, i);
+                    restTestClient.post("/api/auth/signup", body)
+                        .expectStatus(HttpStatus.CREATED);
+                }
+
+                String bodyEstourado = """
+                    {
+                        "nome": "Estourado",
+                        "email": "signup-rl-estourado@fiis.com",
+                        "senha": "senha123"
+                    }
+                    """;
+                restTestClient.post("/api/auth/signup", bodyEstourado)
+                    .expectStatus(HttpStatus.TOO_MANY_REQUESTS)
+                    .expectBody("scenarios/auth/signup/failure/06-rate-limit-signup/expected.json");
             }
         }
     }

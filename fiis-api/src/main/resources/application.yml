@@ -59,6 +59,17 @@ fiis:
     ttl-millis: 86400000
     issuer: fiis-api
 
+  # Rate limiting in-memory (Bucket4j) nos endpoints públicos de autenticação.
+  # login: por e-mail, protege contra brute force em uma conta específica.
+  # signup: por IP, evita criação em massa de contas a partir do mesmo cliente.
+  rate-limit:
+    login:
+      capacidade: 5
+      duracao-minutos: 15
+    signup:
+      capacidade: 3
+      duracao-minutos: 60
+
 # BRAPI - integração com cotações do mercado (https://brapi.dev)
 # token é opcional: free tier funciona sem autenticação. Se preenchido, é
 # enviado como query string para usar o rate limit do plano pago.

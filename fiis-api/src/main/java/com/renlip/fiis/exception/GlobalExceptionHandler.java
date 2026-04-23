@@ -67,6 +67,26 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Trata {@link LimiteRequisicoesException} → HTTP 429 (Too Many Requests).
+     *
+     * <p>Disparada pelo {@code RateLimitSupport} quando o bucket do cliente
+     * está vazio. A mensagem é propositalmente genérica para não vazar
+     * detalhes do mecanismo de rate limiting.</p>
+     */
+    @ExceptionHandler(LimiteRequisicoesException.class)
+    public ResponseEntity<ErroResponse> handleRateLimit(
+            LimiteRequisicoesException ex, HttpServletRequest request) {
+        ErroResponse body = ErroResponse.of(
+            HttpStatus.TOO_MANY_REQUESTS.value(),
+            "Too Many Requests",
+            ex.getMensagem().getCodigo(),
+            resolver(ex.getMensagem(), ex.getArgs()),
+            request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(body);
+    }
+
+    /**
      * Trata erros de validação do Bean Validation → HTTP 400 (Bad Request).
      *
      * <p>Consolida todas as mensagens de erro (um campo pode ter múltiplas)
