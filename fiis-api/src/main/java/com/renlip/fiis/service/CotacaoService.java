@@ -18,6 +18,7 @@ import com.renlip.fiis.domain.dto.brapi.BrapiQuote;
 import com.renlip.fiis.domain.dto.brapi.BrapiQuoteResponse;
 import com.renlip.fiis.domain.entity.Cotacao;
 import com.renlip.fiis.domain.entity.Fundo;
+import com.renlip.fiis.domain.entity.Usuario;
 import com.renlip.fiis.domain.enumeration.MensagemEnum;
 import com.renlip.fiis.domain.mapper.CotacaoMapper;
 import com.renlip.fiis.domain.vo.CotacaoRequest;
@@ -148,8 +149,22 @@ public class CotacaoService {
      */
     @Transactional
     public ImportacaoBrapiResponse importarViaBrapi() {
-        Long usuarioId = usuarioLogado.getUsuarioIdAtual();
-        List<Fundo> fundosAtivos = fundoRepository.findByUsuarioIdAndAtivoTrue(usuarioId);
+        return importarViaBrapiPara(usuarioLogado.getUsuarioAtual());
+    }
+
+    /**
+     * Importa cotações da BRAPI para os fundos ativos do usuário informado.
+     *
+     * <p>Variante sem dependência do {@link UsuarioLogadoSupport} (que só
+     * funciona dentro de uma request HTTP autenticada). Projetada para ser
+     * chamada por jobs agendados, onde o {@code SecurityContextHolder} está
+     * vazio.</p>
+     *
+     * @param usuario usuário dono da carteira a ser atualizada
+     */
+    @Transactional
+    public ImportacaoBrapiResponse importarViaBrapiPara(Usuario usuario) {
+        List<Fundo> fundosAtivos = fundoRepository.findByUsuarioIdAndAtivoTrue(usuario.getId());
         if (fundosAtivos.isEmpty()) {
             throw new RegraNegocioException(MensagemEnum.CARTEIRA_SEM_FUNDOS_ATIVOS);
         }

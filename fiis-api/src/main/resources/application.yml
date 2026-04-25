@@ -113,6 +113,21 @@ fiis:
     from-address: ${FIIS_MAIL_FROM:fiis.app.noreply@gmail.com}
     frontend-url: ${FIIS_FRONTEND_URL:http://localhost:4200}
 
+  # Jobs agendados (@Scheduled). Cada sub-chave representa um job.
+  #
+  # atualizar-cotacoes:
+  #   enabled: liga/desliga o agendamento sem redeploy (env var FIIS_JOB_ATUALIZAR_COTACOES_ENABLED).
+  #            O endpoint manual POST /api/jobs/atualizar-cotacoes continua funcionando mesmo com
+  #            enabled=false.
+  #   cron:    expressão Spring de 6 campos (seg min hora dia mês diaSemana). O default dispara
+  #            todo dia útil às 19:00, janela confortável depois do fechamento do pregão B3 (18h).
+  #            Fim de semana é pulado porque a BRAPI retorna o valor de sexta — seria gasto
+  #            desnecessário de request.
+  job:
+    atualizar-cotacoes:
+      enabled: ${FIIS_JOB_ATUALIZAR_COTACOES_ENABLED:true}
+      cron: ${FIIS_JOB_ATUALIZAR_COTACOES_CRON:0 0 19 * * MON-FRI}
+
 # BRAPI - integração com cotações do mercado (https://brapi.dev)
 # token é opcional: free tier funciona sem autenticação. Se preenchido, é
 # enviado como query string para usar o rate limit do plano pago.
