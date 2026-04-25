@@ -7,3 +7,50 @@ body {
   min-height: 100%;
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
+
+// ============================================
+// Ajustes responsivos globais
+// ============================================
+
+// Listagens (Fundos, Operações, Proventos, Cotações, Eventos):
+// em mobile, o input de busca ocupa a largura toda (sem flex-end),
+// evitando o efeito "grudado na lateral" com width fixo de 24rem.
+@media (max-width: 767px) {
+  .table-caption {
+    justify-content: stretch !important;
+  }
+  .table-caption input {
+    width: 100% !important;
+  }
+}
+
+// Listagens em modo stack (PrimeNG ativa abaixo do breakpoint=960px):
+// cada linha vira um "card" empilhado. Sem separação clara, os registros
+// parecem se misturar. Aqui damos borda + sombra + fundo destacado.
+//
+// As variáveis --p-surface-* não invertem automaticamente entre temas
+// (surface-50 é sempre claro, surface-900 é sempre escuro), por isso
+// definimos light/dark explicitamente. A borda esquerda colorida garante
+// contraste em qualquer tema.
+//
+// !important é necessário porque o PrimeNG aplica suas próprias regras
+// (com seletores muito específicos) na linha base; sem ele os defaults
+// vencem por especificidade.
+@media (max-width: 959px) {
+  .p-datatable-tbody > tr {
+    display: block !important;
+    margin-bottom: 1rem !important;
+    border: 1px solid var(--p-surface-300) !important;
+    border-left: 4px solid var(--p-primary-color) !important;
+    border-radius: 0.5rem !important;
+    padding: 0.75rem 1rem !important;
+    background-color: var(--p-surface-50) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+  }
+
+  .app-dark .p-datatable-tbody > tr {
+    border-color: var(--p-surface-700) !important;
+    background-color: var(--p-surface-800) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  }
+}

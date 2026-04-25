@@ -77,11 +77,12 @@
 
   a {
     color: var(--p-primary-color);
-    text-decoration: none;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
     font-weight: 500;
 
     &:hover {
-      text-decoration: underline;
+      text-decoration-thickness: 2px;
     }
   }
 }

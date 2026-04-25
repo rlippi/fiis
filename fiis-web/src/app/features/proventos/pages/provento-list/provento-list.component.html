@@ -75,27 +75,41 @@
 
     <ng-template #body let-prov>
       <tr>
-        <td>{{ prov.dataPagamento | date: 'dd/MM/yyyy' }}</td>
-        <td>{{ prov.dataReferencia | date: 'dd/MM/yyyy' }}</td>
         <td>
+          <span class="p-column-title">Pagamento</span>
+          {{ prov.dataPagamento | date: 'dd/MM/yyyy' }}
+        </td>
+        <td>
+          <span class="p-column-title">Referência</span>
+          {{ prov.dataReferencia | date: 'dd/MM/yyyy' }}
+        </td>
+        <td>
+          <span class="p-column-title">Fundo</span>
           <strong>{{ prov.fundo.ticker }}</strong>
           <div class="fundo-nome">{{ prov.fundo.nome }}</div>
         </td>
         <td>
+          <span class="p-column-title">Tipo</span>
           @if (prov.tipoProvento === 'RENDIMENTO') {
             <p-tag severity="info" value="Rendimento" />
           } @else {
             <p-tag severity="secondary" value="Amortização" />
           }
         </td>
-        <td class="num">{{ prov.quantidadeCotas }}</td>
         <td class="num">
+          <span class="p-column-title">Cotas</span>
+          {{ prov.quantidadeCotas }}
+        </td>
+        <td class="num">
+          <span class="p-column-title">Valor/cota</span>
           {{ prov.valorPorCota | currency: 'BRL': 'symbol': '1.2-6' }}
         </td>
         <td class="num">
+          <span class="p-column-title">Total</span>
           <strong>{{ prov.valorTotal | currency: 'BRL' }}</strong>
         </td>
         <td class="col-acoes">
+          <span class="p-column-title">Ações</span>
           <p-button
             icon="pi pi-pencil"
             [rounded]="true"

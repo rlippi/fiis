@@ -67,17 +67,29 @@
 
     <ng-template #body let-ev>
       <tr>
-        <td>{{ ev.data | date: 'dd/MM/yyyy' }}</td>
         <td>
+          <span class="p-column-title">Data</span>
+          {{ ev.data | date: 'dd/MM/yyyy' }}
+        </td>
+        <td>
+          <span class="p-column-title">Fundo</span>
           <strong>{{ ev.fundo.ticker }}</strong>
           <div class="fundo-nome">{{ ev.fundo.nome }}</div>
         </td>
         <td>
+          <span class="p-column-title">Tipo</span>
           <p-tag [severity]="tagSeverity(ev.tipo)" [value]="ev.tipoDescricao" />
         </td>
-        <td class="num">{{ ev.fator | number: '1.0-6' }}</td>
-        <td class="muted">{{ ev.descricao || '—' }}</td>
+        <td class="num">
+          <span class="p-column-title">Fator</span>
+          {{ ev.fator | number: '1.0-6' }}
+        </td>
+        <td class="muted">
+          <span class="p-column-title">Descrição</span>
+          {{ ev.descricao || '—' }}
+        </td>
         <td class="col-acoes">
+          <span class="p-column-title">Ações</span>
           <p-button
             icon="pi pi-pencil"
             [rounded]="true"

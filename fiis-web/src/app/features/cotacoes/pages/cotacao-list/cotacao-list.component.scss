@@ -20,6 +20,21 @@
   flex-wrap: wrap;
 }
 
+// Em mobile, "Atualizar carteira" + "Nova cotação" ficam lado a lado
+// dividindo a largura disponível, em vez de empilhados verticalmente
+// (que ocupava muito espaço no card de título).
+@media (max-width: 767px) {
+  .toolbar-actions {
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+  ::ng-deep .toolbar-actions p-button,
+  ::ng-deep .toolbar-actions p-button button {
+    flex: 1;
+    width: 100%;
+  }
+}
+
 .table-caption {
   display: flex;
   justify-content: flex-end;
