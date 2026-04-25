@@ -65,11 +65,24 @@
 
     <ng-template #body let-fundo>
       <tr>
-        <td><strong>{{ fundo.ticker }}</strong></td>
-        <td>{{ fundo.nome }}</td>
-        <td>{{ fundo.tipoDescricao }}</td>
-        <td>{{ fundo.segmentoDescricao }}</td>
         <td>
+          <span class="p-column-title">Ticker</span>
+          <strong>{{ fundo.ticker }}</strong>
+        </td>
+        <td>
+          <span class="p-column-title">Nome</span>
+          {{ fundo.nome }}
+        </td>
+        <td>
+          <span class="p-column-title">Tipo</span>
+          {{ fundo.tipoDescricao }}
+        </td>
+        <td>
+          <span class="p-column-title">Segmento</span>
+          {{ fundo.segmentoDescricao }}
+        </td>
+        <td>
+          <span class="p-column-title">Status</span>
           @if (fundo.ativo) {
             <p-tag severity="success" value="Ativo" />
           } @else {
@@ -77,6 +90,7 @@
           }
         </td>
         <td class="col-acoes">
+          <span class="p-column-title">Ações</span>
           <p-button
             icon="pi pi-pencil"
             [rounded]="true"

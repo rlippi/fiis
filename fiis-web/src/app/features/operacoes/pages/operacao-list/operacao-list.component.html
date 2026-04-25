@@ -72,22 +72,37 @@
 
     <ng-template #body let-op>
       <tr>
-        <td>{{ op.dataOperacao | date: 'dd/MM/yyyy' }}</td>
         <td>
+          <span class="p-column-title">Data</span>
+          {{ op.dataOperacao | date: 'dd/MM/yyyy' }}
+        </td>
+        <td>
+          <span class="p-column-title">Fundo</span>
           <strong>{{ op.fundo.ticker }}</strong>
           <div class="fundo-nome">{{ op.fundo.nome }}</div>
         </td>
         <td>
+          <span class="p-column-title">Tipo</span>
           @if (op.tipo === 'COMPRA') {
             <p-tag severity="success" value="Compra" />
           } @else {
             <p-tag severity="warn" value="Venda" />
           }
         </td>
-        <td class="num">{{ op.quantidade }}</td>
-        <td class="num">{{ op.precoUnitario | currency: 'BRL' }}</td>
-        <td class="num"><strong>{{ op.valorTotal | currency: 'BRL' }}</strong></td>
+        <td class="num">
+          <span class="p-column-title">Qtd</span>
+          {{ op.quantidade }}
+        </td>
+        <td class="num">
+          <span class="p-column-title">Preço un.</span>
+          {{ op.precoUnitario | currency: 'BRL' }}
+        </td>
+        <td class="num">
+          <span class="p-column-title">Total</span>
+          <strong>{{ op.valorTotal | currency: 'BRL' }}</strong>
+        </td>
         <td class="col-acoes">
+          <span class="p-column-title">Ações</span>
           <p-button
             icon="pi pi-pencil"
             [rounded]="true"

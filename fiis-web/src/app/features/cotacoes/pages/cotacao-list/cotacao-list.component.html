@@ -79,27 +79,37 @@
 
     <ng-template #body let-cot>
       <tr>
-        <td>{{ cot.data | date: 'dd/MM/yyyy' }}</td>
         <td>
+          <span class="p-column-title">Data</span>
+          {{ cot.data | date: 'dd/MM/yyyy' }}
+        </td>
+        <td>
+          <span class="p-column-title">Fundo</span>
           <strong>{{ cot.fundo.ticker }}</strong>
           <div class="fundo-nome">{{ cot.fundo.nome }}</div>
         </td>
         <td class="num">
+          <span class="p-column-title">Fechamento</span>
           <strong>{{ cot.precoFechamento | currency: 'BRL' }}</strong>
         </td>
         <td class="num">
+          <span class="p-column-title">Abertura</span>
           {{ cot.precoAbertura ? (cot.precoAbertura | currency: 'BRL') : '—' }}
         </td>
         <td class="num">
+          <span class="p-column-title">Mín.</span>
           {{ cot.precoMinimo ? (cot.precoMinimo | currency: 'BRL') : '—' }}
         </td>
         <td class="num">
+          <span class="p-column-title">Máx.</span>
           {{ cot.precoMaximo ? (cot.precoMaximo | currency: 'BRL') : '—' }}
         </td>
         <td class="num">
+          <span class="p-column-title">Volume</span>
           {{ cot.volume != null ? (cot.volume | number: '1.0-0') : '—' }}
         </td>
         <td class="col-acoes">
+          <span class="p-column-title">Ações</span>
           <p-button
             icon="pi pi-pencil"
             [rounded]="true"
