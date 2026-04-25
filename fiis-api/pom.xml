@@ -99,6 +99,19 @@
             <version>${bucket4j.version}</version>
         </dependency>
 
+        <!-- Cache: abstração @Cacheable/@CacheEvict do Spring -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+
+        <!-- Caffeine: implementação de cache local com TTL e tamanho máximo -->
+        <!-- Versão gerenciada pelo BOM do Spring Boot 3.2.5 -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+
         <!-- Mail: envio de emails via SMTP (usado pelo fluxo de "esqueci minha senha") -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -8,10 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 
+import com.renlip.fiis.config.CacheConfig;
 import com.renlip.fiis.domain.dto.CotacaoResponse;
 import com.renlip.fiis.domain.dto.ImportacaoBrapiResponse;
 import com.renlip.fiis.domain.dto.brapi.BrapiQuote;
@@ -81,6 +83,7 @@ public class CotacaoService {
     }
 
     @Transactional
+    @CacheEvict(value = CacheConfig.CACHE_ULTIMA_COTACAO_POR_FUNDO, key = "#request.fundoId()")
     public CotacaoResponse criar(CotacaoRequest request) {
         Fundo fundo = obterFundoDoUsuario(request.fundoId());
         validarMinimoMaximo(request.precoMinimo(), request.precoMaximo());
@@ -106,6 +109,7 @@ public class CotacaoService {
     }
 
     @Transactional
+    @CacheEvict(value = CacheConfig.CACHE_ULTIMA_COTACAO_POR_FUNDO, allEntries = true)
     public CotacaoResponse atualizar(Long id, CotacaoRequest request) {
         Cotacao cotacao = obterEntidade(id);
         Fundo fundo = obterFundoDoUsuario(request.fundoId());
@@ -133,6 +137,7 @@ public class CotacaoService {
     }
 
     @Transactional
+    @CacheEvict(value = CacheConfig.CACHE_ULTIMA_COTACAO_POR_FUNDO, allEntries = true)
     public void deletar(Long id) {
         Cotacao cotacao = obterEntidade(id);
         cotacaoRepository.delete(cotacao);
@@ -148,6 +153,7 @@ public class CotacaoService {
      * existe, uma nova cotação é criada.</p>
      */
     @Transactional
+    @CacheEvict(value = CacheConfig.CACHE_ULTIMA_COTACAO_POR_FUNDO, allEntries = true)
     public ImportacaoBrapiResponse importarViaBrapi() {
         return importarViaBrapiPara(usuarioLogado.getUsuarioAtual());
     }
@@ -163,6 +169,7 @@ public class CotacaoService {
      * @param usuario usuário dono da carteira a ser atualizada
      */
     @Transactional
+    @CacheEvict(value = CacheConfig.CACHE_ULTIMA_COTACAO_POR_FUNDO, allEntries = true)
     public ImportacaoBrapiResponse importarViaBrapiPara(Usuario usuario) {
         List<Fundo> fundosAtivos = fundoRepository.findByUsuarioIdAndAtivoTrue(usuario.getId());
         if (fundosAtivos.isEmpty()) {

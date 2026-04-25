@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.renlip.fiis.domain.dto.PosicaoResponse;
+import com.renlip.fiis.domain.dto.UltimaCotacaoResumo;
 import com.renlip.fiis.domain.entity.Cotacao;
 import com.renlip.fiis.domain.entity.EventoCorporativo;
 import com.renlip.fiis.domain.entity.Fundo;
@@ -22,7 +23,6 @@ import com.renlip.fiis.domain.enumeration.TipoEventoCorporativo;
 import com.renlip.fiis.domain.enumeration.TipoOperacao;
 import com.renlip.fiis.domain.mapper.FundoResumoMapper;
 import com.renlip.fiis.exception.RecursoNaoEncontradoException;
-import com.renlip.fiis.repository.CotacaoRepository;
 import com.renlip.fiis.repository.EventoCorporativoRepository;
 import com.renlip.fiis.repository.FundoRepository;
 import com.renlip.fiis.repository.OperacaoRepository;
@@ -56,7 +56,7 @@ public class PosicaoService {
     private final FundoRepository fundoRepository;
     private final OperacaoRepository operacaoRepository;
     private final ProventoRepository proventoRepository;
-    private final CotacaoRepository cotacaoRepository;
+    private final CotacaoCacheService cotacaoCacheService;
     private final EventoCorporativoRepository eventoRepository;
     private final FundoResumoMapper fundoResumoMapper;
     private final UsuarioLogadoSupport usuarioLogado;
@@ -132,9 +132,9 @@ public class PosicaoService {
                 .divide(custoAtual, ESCALA_MONETARIA, RoundingMode.HALF_UP)
             : BigDecimal.ZERO;
 
-        Optional<Cotacao> ultimaCotacao = cotacaoRepository.findFirstByFundoIdOrderByDataDesc(fundo.getId());
-        BigDecimal precoAtual = ultimaCotacao.map(Cotacao::getPrecoFechamento).orElse(null);
-        LocalDate dataUltimaCotacao = ultimaCotacao.map(Cotacao::getData).orElse(null);
+        Optional<UltimaCotacaoResumo> ultimaCotacao = cotacaoCacheService.buscarUltimaCotacaoPorFundo(fundo.getId());
+        BigDecimal precoAtual = ultimaCotacao.map(UltimaCotacaoResumo::precoFechamento).orElse(null);
+        LocalDate dataUltimaCotacao = ultimaCotacao.map(UltimaCotacaoResumo::data).orElse(null);
 
         BigDecimal valorAtual = precoAtual != null
             ? estado.qty.multiply(precoAtual).setScale(ESCALA_MONETARIA, RoundingMode.HALF_UP)
