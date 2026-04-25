@@ -113,6 +113,20 @@ fiis:
     from-address: ${FIIS_MAIL_FROM:fiis.app.noreply@gmail.com}
     frontend-url: ${FIIS_FRONTEND_URL:http://localhost:4200}
 
+  # Caches locais (Caffeine). Cada sub-chave representa um cache nomeado.
+  #
+  # ultima-cotacao:
+  #   ttl-minutos: tempo de vida de cada entrada (rede de segurança caso algum
+  #                @CacheEvict deixe de disparar). 30min é seguro: cotações
+  #                mudam só 1x/dia (job das 19h ou disparo manual), e qualquer
+  #                escrita explícita já invalida via @CacheEvict.
+  #   max-size:    tamanho máximo do cache (entradas). 500 acomoda dezenas de
+  #                carteiras simultâneas — cada usuário tem ~10 fundos.
+  cache:
+    ultima-cotacao:
+      ttl-minutos: ${FIIS_CACHE_ULTIMA_COTACAO_TTL_MIN:30}
+      max-size: ${FIIS_CACHE_ULTIMA_COTACAO_MAX_SIZE:500}
+
   # Jobs agendados (@Scheduled). Cada sub-chave representa um job.
   #
   # atualizar-cotacoes:
