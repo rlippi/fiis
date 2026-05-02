@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { DOCUMENT } from '@angular/common';
-import { Observable, tap } from 'rxjs';
+import { Observable, catchError, of, tap, throwError } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { CredencialVO } from '../models/vo/credencial.vo';
@@ -66,14 +66,51 @@ export class AuthService {
     );
   }
 
-  logout(): void {
-    this.tokenService.clearToken();
-    this.storage?.removeItem(USER_KEY);
-    this._currentUser.set(null);
+  /**
+   * Rotaciona o refresh token: troca o atual por um novo par (access + refresh)
+   * e atualiza o storage. Se não houver refresh persistido, retorna erro
+   * imediatamente sem chamar a API.
+   */
+  refresh(): Observable<TokenResponse> {
+    const refreshToken = this.tokenService.getRefreshToken();
+    if (!refreshToken) {
+      return throwError(() => new Error('Sem refresh token persistido'));
+    }
+    return this.http
+      .post<TokenResponse>(`${environment.apiUrl}/api/auth/refresh`, { refreshToken })
+      .pipe(tap((response) => this.persistSession(response)));
+  }
+
+  /**
+   * Logout: revoga o refresh token no servidor (best-effort) e limpa todo o
+   * estado local independentemente da resposta do backend. Falha no servidor
+   * não bloqueia o logout local — o objetivo é garantir que o usuário saia
+   * mesmo com problema de rede.
+   */
+  logout(): Observable<void> {
+    const refreshToken = this.tokenService.getRefreshToken();
+    const finish = (): void => {
+      this.tokenService.clearAll();
+      this.storage?.removeItem(USER_KEY);
+      this._currentUser.set(null);
+    };
+
+    if (!refreshToken) {
+      finish();
+      return of(undefined);
+    }
+
+    return this.http
+      .post<void>(`${environment.apiUrl}/api/auth/logout`, { refreshToken })
+      .pipe(
+        catchError(() => of(undefined)),
+        tap(() => finish())
+      );
   }
 
   private persistSession(response: TokenResponse): void {
     this.tokenService.setToken(response.token);
+    this.tokenService.setRefreshToken(response.refreshToken);
     const user: UsuarioLogado = {
       nome: response.nome,
       perfil: response.perfil

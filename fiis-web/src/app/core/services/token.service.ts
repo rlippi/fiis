@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 
 const TOKEN_KEY = 'fiis-token';
+const REFRESH_TOKEN_KEY = 'fiis-refresh-token';
 
 @Injectable({ providedIn: 'root' })
 export class TokenService {
@@ -21,5 +22,26 @@ export class TokenService {
 
   clearToken(): void {
     this.storage?.removeItem(TOKEN_KEY);
+  }
+
+  getRefreshToken(): string | null {
+    return this.storage?.getItem(REFRESH_TOKEN_KEY) ?? null;
+  }
+
+  setRefreshToken(token: string): void {
+    this.storage?.setItem(REFRESH_TOKEN_KEY, token);
+  }
+
+  clearRefreshToken(): void {
+    this.storage?.removeItem(REFRESH_TOKEN_KEY);
+  }
+
+  /**
+   * Limpa ambos os tokens em uma operação. Usado no logout para garantir que
+   * nenhum vestígio fique no localStorage.
+   */
+  clearAll(): void {
+    this.clearToken();
+    this.clearRefreshToken();
   }
 }
