@@ -119,3 +119,8 @@ exemplo/
 # Anotações pessoais (contêm credenciais das plataformas)
 # ==============================================
 Anotacoes.md
+
+# ==============================================
+# Guias pessoais de setup (caminho local, instruções específicas)
+# ==============================================
+GUIA-NOVA-MAQUINA.md
