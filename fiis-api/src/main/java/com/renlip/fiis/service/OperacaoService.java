@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +13,9 @@ import com.renlip.fiis.domain.entity.Fundo;
 import com.renlip.fiis.domain.entity.Operacao;
 import com.renlip.fiis.domain.enumeration.MensagemEnum;
 import com.renlip.fiis.domain.enumeration.TipoOperacao;
+import com.renlip.fiis.domain.event.OperacaoAtualizadaEvent;
+import com.renlip.fiis.domain.event.OperacaoCriadaEvent;
+import com.renlip.fiis.domain.event.OperacaoExcluidaEvent;
 import com.renlip.fiis.domain.mapper.OperacaoMapper;
 import com.renlip.fiis.domain.vo.OperacaoRequest;
 import com.renlip.fiis.exception.RecursoNaoEncontradoException;
@@ -46,6 +50,7 @@ public class OperacaoService {
     private final FundoRepository fundoRepository;
     private final OperacaoMapper operacaoMapper;
     private final UsuarioLogadoSupport usuarioLogado;
+    private final ApplicationEventPublisher eventPublisher;
 
     public List<OperacaoResponse> listarTodas() {
         List<Operacao> operacoes = usuarioLogado.isAdmin()
@@ -103,6 +108,18 @@ public class OperacaoService {
             .build();
 
         Operacao salva = operacaoRepository.save(operacao);
+
+        eventPublisher.publishEvent(new OperacaoCriadaEvent(
+            salva.getId(),
+            fundo.getId(),
+            fundo.getTicker(),
+            salva.getTipo(),
+            salva.getQuantidade(),
+            salva.getPrecoUnitario(),
+            salva.getDataOperacao(),
+            fundo.getUsuario().getId(),
+            usuarioLogado.getUsuarioIdAtual()));
+
         return operacaoMapper.toResponse(salva);
     }
 
@@ -123,13 +140,36 @@ public class OperacaoService {
         operacao.setObservacao(request.observacao());
 
         Operacao atualizada = operacaoRepository.save(operacao);
+
+        eventPublisher.publishEvent(new OperacaoAtualizadaEvent(
+            atualizada.getId(),
+            novoFundo.getId(),
+            novoFundo.getTicker(),
+            atualizada.getTipo(),
+            atualizada.getQuantidade(),
+            atualizada.getPrecoUnitario(),
+            atualizada.getDataOperacao(),
+            novoFundo.getUsuario().getId(),
+            usuarioLogado.getUsuarioIdAtual()));
+
         return operacaoMapper.toResponse(atualizada);
     }
 
     @Transactional
     public void deletar(Long id) {
         Operacao operacao = obterEntidade(id);
+        Long fundoId = operacao.getFundo().getId();
+        String ticker = operacao.getFundo().getTicker();
+        Long usuarioDonoId = operacao.getUsuario().getId();
+
         operacaoRepository.delete(operacao);
+
+        eventPublisher.publishEvent(new OperacaoExcluidaEvent(
+            id,
+            fundoId,
+            ticker,
+            usuarioDonoId,
+            usuarioLogado.getUsuarioIdAtual()));
     }
 
     private void validarPosicaoParaEdicao(Operacao atual, Long novoFundoId, OperacaoRequest req) {
