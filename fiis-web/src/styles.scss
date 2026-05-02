@@ -24,6 +24,16 @@ body {
   }
 }
 
+// Listagens em desktop: o <span class="p-column-title"> existe nos <td>
+// para alimentar o modo stack do PrimeNG em mobile (≤ 959px). Em desktop
+// ele precisa ficar oculto — versões recentes do PrimeNG não escondem
+// mais por default, então forçamos aqui.
+@media (min-width: 960px) {
+  .p-column-title {
+    display: none !important;
+  }
+}
+
 // Listagens em modo stack (PrimeNG ativa abaixo do breakpoint=960px):
 // cada linha vira um "card" empilhado. Sem separação clara, os registros
 // parecem se misturar. Aqui damos borda + sombra + fundo destacado.
