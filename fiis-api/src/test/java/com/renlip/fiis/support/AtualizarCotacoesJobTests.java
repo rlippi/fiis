@@ -9,13 +9,16 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import com.renlip.fiis.config.JobProperties;
 import com.renlip.fiis.config.JobProperties.AtualizarCotacoes;
@@ -46,8 +49,19 @@ class AtualizarCotacoesJobTests {
     @Mock
     private JobProperties jobProperties;
 
-    @InjectMocks
     private AtualizarCotacoesJob job;
+
+    /**
+     * Constrói o job manualmente em vez de usar {@code @InjectMocks} porque um dos
+     * parâmetros do construtor ({@link MeterRegistry}) precisa ser uma implementação
+     * funcional (contadores reais), não um mock — o construtor já registra contadores
+     * nele. {@link SimpleMeterRegistry} é o registry in-memory padrão do Micrometer.
+     */
+    @BeforeEach
+    void setupJob() {
+        MeterRegistry meterRegistry = new SimpleMeterRegistry();
+        job = new AtualizarCotacoesJob(usuarioRepository, cotacaoService, jobProperties, meterRegistry);
+    }
 
     private Usuario usuario(long id, String email) {
         return Usuario.builder()

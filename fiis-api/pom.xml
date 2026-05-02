@@ -62,10 +62,19 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
-        <!-- Actuator: endpoints de gestão (/actuator/health etc.) usados para health check do Render -->
+        <!-- Actuator: endpoints de gestão (/actuator/health, /actuator/info, /actuator/metrics, /actuator/prometheus). -->
+        <!-- Já era usado para health check do Render desde a FASE 6.1; agora também alimenta as métricas customizadas. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Micrometer Prometheus: exporta /actuator/prometheus em formato compatível com Prometheus/Grafana. -->
+        <!-- Versão gerenciada pelo BOM do Spring Boot 3.2.5. Habilita o futuro Tier 2 de observabilidade -->
+        <!-- (Grafana Cloud) sem precisar reescrever as métricas registradas via MeterRegistry. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
 
         <!-- JJWT: geração e validação de tokens JWT (API moderna 0.12.x) -->
@@ -197,7 +206,9 @@
 
     <build>
         <plugins>
-            <!-- Plugin do Spring Boot: empacota o JAR executável -->
+            <!-- Plugin do Spring Boot: empacota o JAR executável e gera build-info -->
+            <!-- O goal build-info cria META-INF/build-info.properties (versão, timestamp, group/artifact). -->
+            <!-- Aparece em /actuator/info — útil pra confirmar qual versão está rodando em HML/PROD. -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -209,6 +220,13 @@
                         </exclude>
                     </excludes>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build-info</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- Compiler: habilita annotation processors do MapStruct e Lombok -->

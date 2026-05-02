@@ -202,13 +202,36 @@ springdoc:
   swagger-ui:
     tags-sorter: alpha
 
-# Actuator: desliga o health indicator do SMTP (o spring-boot-starter-mail o adiciona
-# automaticamente). Sem isso, cada chamada a /actuator/health tenta conectar ao SMTP
-# e quebra o endpoint quando o mail está em modo log-only (sem senha) ou indisponível.
+# Actuator: endpoints expostos e detalhes de health/metrics.
+#
+# Endpoints expostos:
+#   - health: usado por health check do Render (público em SecurityConfig)
+#   - info: versão da app + build info (público — expõe só metadata inócua)
+#   - metrics: lista todas as métricas Micrometer (admin-only — vaza volume operacional)
+#   - prometheus: dump em formato Prometheus para scraping (admin-only — pesado, alvo de DDoS)
+#
+# Tags globais: as métricas saem com `application=fiis-api` automaticamente, o que
+# facilita filtrar por serviço quando outros backends compartilharem o mesmo Grafana.
+#
+# health-mail: o spring-boot-starter-mail adiciona um health indicator que tenta conectar
+# no SMTP. Sem desligar, /actuator/health falha em dev (mail em modo log-only sem senha).
+#
+# show-details=when-authorized expõe detalhes (DB, disco, etc.) só para usuários
+# autenticados; scrapers anônimos veem só status UP/DOWN.
 management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
   health:
     mail:
       enabled: false
+  metrics:
+    tags:
+      application: fiis-api
 
 # Porta da API (Render injeta ${PORT}; default 8081 em dev local)
 server:

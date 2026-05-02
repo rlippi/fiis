@@ -29,10 +29,11 @@ import com.renlip.fiis.repository.OperacaoRepository;
 import com.renlip.fiis.repository.ProventoRepository;
 import com.renlip.fiis.support.UsuarioLogadoSupport;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+
 import static com.renlip.fiis.constant.EscalaConstants.ESCALA_CALCULO;
 import static com.renlip.fiis.constant.EscalaConstants.ESCALA_MONETARIA;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * Service responsável pelo cálculo da <b>posição consolidada</b> por fundo.
@@ -49,7 +50,6 @@ import lombok.RequiredArgsConstructor;
  * múltiplos usuários.</p>
  */
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PosicaoService {
 
@@ -60,6 +60,28 @@ public class PosicaoService {
     private final EventoCorporativoRepository eventoRepository;
     private final FundoResumoMapper fundoResumoMapper;
     private final UsuarioLogadoSupport usuarioLogado;
+    private final Timer calculoPosicaoTimer;
+
+    public PosicaoService(
+            final FundoRepository fundoRepository,
+            final OperacaoRepository operacaoRepository,
+            final ProventoRepository proventoRepository,
+            final CotacaoCacheService cotacaoCacheService,
+            final EventoCorporativoRepository eventoRepository,
+            final FundoResumoMapper fundoResumoMapper,
+            final UsuarioLogadoSupport usuarioLogado,
+            final MeterRegistry meterRegistry) {
+        this.fundoRepository = fundoRepository;
+        this.operacaoRepository = operacaoRepository;
+        this.proventoRepository = proventoRepository;
+        this.cotacaoCacheService = cotacaoCacheService;
+        this.eventoRepository = eventoRepository;
+        this.fundoResumoMapper = fundoResumoMapper;
+        this.usuarioLogado = usuarioLogado;
+        this.calculoPosicaoTimer = Timer.builder("fiis.posicao.calculo")
+            .description("Tempo (ns) gasto para calcular a posição consolidada de um fundo — gargalo em carteiras grandes")
+            .register(meterRegistry);
+    }
 
     /**
      * Calcula a posição consolidada de todos os fundos ativos da carteira
@@ -103,6 +125,10 @@ public class PosicaoService {
     }
 
     private PosicaoResponse calcularPosicao(Fundo fundo) {
+        return calculoPosicaoTimer.record(() -> calcularPosicaoInterno(fundo));
+    }
+
+    private PosicaoResponse calcularPosicaoInterno(Fundo fundo) {
         List<Operacao> operacoes = operacaoRepository.findByFundoIdOrderByDataOperacaoDesc(fundo.getId());
         List<EventoCorporativo> eventos = eventoRepository.findByFundoIdOrderByDataAsc(fundo.getId());
 

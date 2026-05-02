@@ -12,7 +12,8 @@ import com.renlip.fiis.domain.entity.Usuario;
 import com.renlip.fiis.repository.UsuarioRepository;
 import com.renlip.fiis.service.CotacaoService;
 
-import lombok.RequiredArgsConstructor;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -40,7 +41,6 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  */
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class AtualizarCotacoesJob {
 
@@ -49,6 +49,28 @@ public class AtualizarCotacoesJob {
     private final CotacaoService cotacaoService;
 
     private final JobProperties jobProperties;
+
+    private final Counter brapiImportOkCounter;
+
+    private final Counter brapiImportFalhaCounter;
+
+    public AtualizarCotacoesJob(
+            final UsuarioRepository usuarioRepository,
+            final CotacaoService cotacaoService,
+            final JobProperties jobProperties,
+            final MeterRegistry meterRegistry) {
+        this.usuarioRepository = usuarioRepository;
+        this.cotacaoService = cotacaoService;
+        this.jobProperties = jobProperties;
+        this.brapiImportOkCounter = Counter.builder("fiis.brapi.import")
+            .description("Total de importações de cotações via BRAPI por usuário")
+            .tag("status", "ok")
+            .register(meterRegistry);
+        this.brapiImportFalhaCounter = Counter.builder("fiis.brapi.import")
+            .description("Total de importações de cotações via BRAPI por usuário")
+            .tag("status", "falha")
+            .register(meterRegistry);
+    }
 
     /**
      * Ponto de entrada do agendador do Spring. A expressão cron é lida do YAML
@@ -95,10 +117,12 @@ public class AtualizarCotacoesJob {
                 comSucesso++;
                 criadosTotal += resumo.criados();
                 atualizadosTotal += resumo.atualizados();
+                brapiImportOkCounter.increment();
             } catch (Exception ex) {
                 log.warn("[JOB atualizar-cotacoes] Falha ao atualizar usuário {} ({}): {}",
                     usuario.getId(), usuario.getEmail(), ex.getMessage());
                 comFalha++;
+                brapiImportFalhaCounter.increment();
             }
         }
 
