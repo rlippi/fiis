@@ -1,5 +1,31 @@
 <section class="relatorios">
-  <h1 class="title">Relatórios</h1>
+  <p-toolbar>
+    <ng-template #start>
+      <h1 class="title">Relatórios</h1>
+    </ng-template>
+    <ng-template #end>
+      <div class="toolbar-actions">
+        <p-button
+          label="Exportar PDF"
+          icon="pi pi-file-pdf"
+          severity="secondary"
+          [outlined]="true"
+          [loading]="exportandoPdf()"
+          [disabled]="loading()"
+          (onClick)="baixarPdf()"
+        />
+        <p-button
+          label="Exportar Excel"
+          icon="pi pi-file-excel"
+          severity="secondary"
+          [outlined]="true"
+          [loading]="exportandoXlsx()"
+          [disabled]="loading()"
+          (onClick)="baixarXlsx()"
+        />
+      </div>
+    </ng-template>
+  </p-toolbar>
 
   @if (loading()) {
     <div class="kpi-grid">

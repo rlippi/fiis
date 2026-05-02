@@ -53,10 +53,42 @@ export class ErrorService {
   }
 
   showToast(err: HttpErrorResponse, summary: string = 'Erro'): void {
+    if (err.error instanceof Blob) {
+      this.normalizarErroBlob(err)
+        .then((normalizado) => this.dispatchToast(normalizado, summary))
+        .catch(() => this.dispatchToast(err, summary));
+      return;
+    }
+    this.dispatchToast(err, summary);
+  }
+
+  private dispatchToast(err: HttpErrorResponse, summary: string): void {
     this.messageService.add({
       severity: 'error',
       summary,
       detail: this.mapMessage(err)
+    });
+  }
+
+  /**
+   * Em respostas com {@code responseType: 'blob'}, o backend ainda devolve
+   * JSON em caso de erro — porém o {@code HttpClient} embrulha o corpo em
+   * um {@link Blob}, escondendo {@code err.error.mensagem} do
+   * {@link mapMessage}. Aqui parseamos o Blob como texto + JSON e
+   * reconstruímos um {@link HttpErrorResponse} com o body já decodificado.
+   */
+  private async normalizarErroBlob(err: HttpErrorResponse): Promise<HttpErrorResponse> {
+    if (!(err.error instanceof Blob)) {
+      return err;
+    }
+    const texto = await err.error.text();
+    const parsed: unknown = JSON.parse(texto);
+    return new HttpErrorResponse({
+      error: parsed,
+      headers: err.headers,
+      status: err.status,
+      statusText: err.statusText,
+      url: err.url ?? undefined
     });
   }
 }
