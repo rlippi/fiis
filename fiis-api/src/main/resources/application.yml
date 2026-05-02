@@ -149,6 +149,22 @@ fiis:
       enabled: ${FIIS_JOB_ATUALIZAR_COTACOES_ENABLED:true}
       cron: ${FIIS_JOB_ATUALIZAR_COTACOES_CRON:0 0 19 * * MON-FRI}
 
+  # Seed de dados demo (FASE 9.1).
+  #
+  # Quando enabled=true (apenas em HML por default), o SeedDemoRunner cria no
+  # startup um usuário público com carteira de exemplo, permitindo que visitantes
+  # explorem o app sem precisar se cadastrar. É idempotente: se o e-mail já
+  # existe, o seed é ignorado.
+  #
+  # Em dev/test fica desligado por default para não poluir o banco local nem
+  # interferir nas fixtures dos testes (que usam test@fiis.com).
+  seed:
+    demo:
+      enabled: ${FIIS_SEED_DEMO_ENABLED:false}
+      email: ${FIIS_SEED_DEMO_EMAIL:demo@fiis.com}
+      senha: ${FIIS_SEED_DEMO_SENHA:demo1234}
+      nome: ${FIIS_SEED_DEMO_NOME:Conta Demo}
+
 # BRAPI - integração com cotações do mercado (https://brapi.dev)
 # token é opcional: free tier funciona sem autenticação. Se preenchido, é
 # enviado como query string para usar o rate limit do plano pago.
