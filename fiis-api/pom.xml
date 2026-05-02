@@ -27,6 +27,8 @@
         <jjwt.version>0.12.6</jjwt.version>
         <bucket4j.version>8.10.1</bucket4j.version>
         <greenmail-junit5.version>2.1.7</greenmail-junit5.version>
+        <resilience4j.version>2.2.0</resilience4j.version>
+        <wiremock.version>3.6.0</wiremock.version>
     </properties>
 
     <dependencies>
@@ -112,6 +114,20 @@
             <artifactId>caffeine</artifactId>
         </dependency>
 
+        <!-- Resilience4j: Retry, CircuitBreaker e demais patterns de tolerância a falhas -->
+        <!-- Aplicado no BrapiTickerFetcher para proteger as chamadas HTTP à BRAPI -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot3</artifactId>
+            <version>${resilience4j.version}</version>
+        </dependency>
+
+        <!-- AOP: necessário para que as annotations @Retry/@CircuitBreaker sejam interceptadas -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
         <!-- Mail: envio de emails via SMTP (usado pelo fluxo de "esqueci minha senha") -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -166,6 +182,15 @@
             <groupId>com.icegreen</groupId>
             <artifactId>greenmail-junit5</artifactId>
             <version>${greenmail-junit5.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Teste: WireMock — servidor HTTP in-memory para mockar a BRAPI em testes -->
+        <!-- de Resilience4j (validar Retry, CircuitBreaker e fallback do BrapiClient). -->
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
+            <version>${wiremock.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
