@@ -1,7 +1,10 @@
 package com.renlip.fiis.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,6 +14,7 @@ import com.renlip.fiis.domain.dto.AlocacaoResponse;
 import com.renlip.fiis.domain.dto.RendaMensalResponse;
 import com.renlip.fiis.domain.dto.RendaPorFundoResponse;
 import com.renlip.fiis.domain.dto.ResumoCarteiraResponse;
+import com.renlip.fiis.service.RelatorioExportService;
 import com.renlip.fiis.service.RelatorioService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,7 +34,11 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Relatórios", description = "Relatórios agregados da carteira (dashboard)")
 public class RelatorioController {
 
+    private static final String CONTENT_TYPE_XLSX =
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
     private final RelatorioService relatorioService;
+    private final RelatorioExportService relatorioExportService;
 
     /**
      * Renda passiva agrupada por mês de pagamento.
@@ -118,5 +126,47 @@ public class RelatorioController {
     })
     public ResponseEntity<ResumoCarteiraResponse> resumoCarteira() {
         return ResponseEntity.ok(relatorioService.gerarResumoCarteira());
+    }
+
+    /**
+     * Exporta a posição consolidada da carteira em PDF (1 página executiva).
+     */
+    @GetMapping(value = "/posicao.pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @Operation(
+        summary = "Exporta a posição da carteira em PDF",
+        description = "Gera um relatório executivo de uma página com KPIs, alocação por segmento e posição consolidada."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "PDF gerado com sucesso")
+    })
+    public ResponseEntity<byte[]> exportarPosicaoPdf() {
+        byte[] arquivo = relatorioExportService.exportarPosicaoPdf();
+        return ResponseEntity.ok()
+            .contentType(MediaType.APPLICATION_PDF)
+            .header(HttpHeaders.CONTENT_DISPOSITION, dispositionAttachment("fiis-posicao", "pdf"))
+            .body(arquivo);
+    }
+
+    /**
+     * Exporta a posição consolidada da carteira em XLSX (planilha analítica).
+     */
+    @GetMapping(value = "/posicao.xlsx", produces = CONTENT_TYPE_XLSX)
+    @Operation(
+        summary = "Exporta a posição da carteira em XLSX",
+        description = "Gera uma planilha Excel com a posição consolidada (uma linha por fundo) e linha de totais."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "XLSX gerado com sucesso")
+    })
+    public ResponseEntity<byte[]> exportarPosicaoXlsx() {
+        byte[] arquivo = relatorioExportService.exportarPosicaoXlsx();
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType(CONTENT_TYPE_XLSX))
+            .header(HttpHeaders.CONTENT_DISPOSITION, dispositionAttachment("fiis-posicao", "xlsx"))
+            .body(arquivo);
+    }
+
+    private static String dispositionAttachment(String prefixoNome, String extensao) {
+        return "attachment; filename=\"" + prefixoNome + "-" + LocalDate.now() + "." + extensao + "\"";
     }
 }

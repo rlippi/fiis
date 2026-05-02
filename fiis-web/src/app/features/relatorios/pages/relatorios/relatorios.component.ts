@@ -1,11 +1,14 @@
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
+import { ToolbarModule } from 'primeng/toolbar';
 import { forkJoin } from 'rxjs';
 
 import { ErrorService } from '../../../../core/services/error.service';
@@ -31,7 +34,17 @@ const PALETA = [
 
 @Component({
   selector: 'app-relatorios',
-  imports: [CurrencyPipe, DecimalPipe, CardModule, ChartModule, SkeletonModule, TableModule, TagModule],
+  imports: [
+    CurrencyPipe,
+    DecimalPipe,
+    ButtonModule,
+    CardModule,
+    ChartModule,
+    SkeletonModule,
+    TableModule,
+    TagModule,
+    ToolbarModule
+  ],
   templateUrl: './relatorios.component.html',
   styleUrl: './relatorios.component.scss'
 })
@@ -43,6 +56,9 @@ export class RelatoriosComponent implements OnInit {
   protected readonly loading = signal(true);
   protected readonly resumo = signal<ResumoCarteiraDTO | null>(null);
   protected readonly rendaPorFundo = signal<RendaPorFundoDTO[]>([]);
+
+  protected readonly exportandoPdf = signal(false);
+  protected readonly exportandoXlsx = signal(false);
 
   protected readonly chartTipo = signal<unknown>(null);
   protected readonly chartSegmento = signal<unknown>(null);
@@ -169,5 +185,54 @@ export class RelatoriosComponent implements OnInit {
     if (typeof window === 'undefined') return fallback;
     const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     return value || fallback;
+  }
+
+  protected baixarPdf(): void {
+    this.exportandoPdf.set(true);
+    this.relatorioService.exportarPosicaoPdf().subscribe({
+      next: (response) => {
+        this.disparaDownload(response, 'fiis-posicao.pdf');
+        this.exportandoPdf.set(false);
+      },
+      error: (err) => {
+        this.exportandoPdf.set(false);
+        this.errorService.showToast(err, 'Erro ao exportar PDF');
+      }
+    });
+  }
+
+  protected baixarXlsx(): void {
+    this.exportandoXlsx.set(true);
+    this.relatorioService.exportarPosicaoXlsx().subscribe({
+      next: (response) => {
+        this.disparaDownload(response, 'fiis-posicao.xlsx');
+        this.exportandoXlsx.set(false);
+      },
+      error: (err) => {
+        this.exportandoXlsx.set(false);
+        this.errorService.showToast(err, 'Erro ao exportar Excel');
+      }
+    });
+  }
+
+  private disparaDownload(response: HttpResponse<Blob>, fallbackFilename: string): void {
+    const blob = response.body;
+    if (!blob) return;
+    const filename = this.extrairFilename(response) ?? fallbackFilename;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  private extrairFilename(response: HttpResponse<Blob>): string | null {
+    const disposition = response.headers.get('content-disposition');
+    if (!disposition) return null;
+    const match = /filename="?([^"]+)"?/.exec(disposition);
+    return match ? match[1] : null;
   }
 }

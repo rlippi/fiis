@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -31,5 +31,19 @@ export class RelatorioService {
 
   rendaPorFundo(): Observable<RendaPorFundoDTO[]> {
     return this.http.get<RendaPorFundoDTO[]>(`${this.baseUrl}/renda-por-fundo`);
+  }
+
+  exportarPosicaoPdf(): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.baseUrl}/posicao.pdf`, {
+      responseType: 'blob',
+      observe: 'response'
+    });
+  }
+
+  exportarPosicaoXlsx(): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.baseUrl}/posicao.xlsx`, {
+      responseType: 'blob',
+      observe: 'response'
+    });
   }
 }

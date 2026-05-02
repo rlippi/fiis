@@ -29,6 +29,9 @@
         <greenmail-junit5.version>2.1.7</greenmail-junit5.version>
         <resilience4j.version>2.2.0</resilience4j.version>
         <wiremock.version>3.6.0</wiremock.version>
+        <openpdf.version>2.0.3</openpdf.version>
+        <poi.version>5.3.0</poi.version>
+        <pdfbox.version>3.0.3</pdfbox.version>
     </properties>
 
     <dependencies>
@@ -200,6 +203,31 @@
             <groupId>org.wiremock</groupId>
             <artifactId>wiremock-standalone</artifactId>
             <version>${wiremock.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- OpenPDF: geração de PDF (fork moderno do iText 4, leve, código Java direto). -->
+        <!-- Usado em export/PdfExportSupport para o relatório executivo de carteira. -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>${openpdf.version}</version>
+        </dependency>
+
+        <!-- Apache POI XSSF: geração de planilhas .xlsx (formato OOXML do Excel). -->
+        <!-- Usado em export/XlsxExportSupport para a planilha de posição consolidada. -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${poi.version}</version>
+        </dependency>
+
+        <!-- Teste: PDFBox para parsear PDFs gerados e validar conteúdo (texto, estrutura). -->
+        <!-- Não vai pro JAR final — só em RelatorioExportControllerTests verificar bytes do PDF. -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>${pdfbox.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
