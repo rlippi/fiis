@@ -55,6 +55,23 @@
           styleClass="submit-button"
         />
 
+        <div class="demo-divider">
+          <span>ou</span>
+        </div>
+
+        <p class="demo-hint">Sem cadastro? Veja o app com dados de exemplo:</p>
+        <p-button
+          type="button"
+          label="Acessar conta demo"
+          icon="pi pi-eye"
+          severity="secondary"
+          [outlined]="true"
+          [loading]="loadingDemo()"
+          [disabled]="loading()"
+          (onClick)="loginComoDemo()"
+          styleClass="submit-button"
+        />
+
         <p class="forgot-link">
           <a routerLink="/esqueci-senha">Esqueci minha senha</a>
         </p>

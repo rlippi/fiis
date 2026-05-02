@@ -38,9 +38,13 @@ export class LoginComponent {
   });
 
   protected readonly loading = signal(false);
+  protected readonly loadingDemo = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
 
   protected readonly themeMode = this.themeService.mode;
+
+  private readonly DEMO_EMAIL = 'demo@fiis.com';
+  private readonly DEMO_SENHA = 'demo1234';
 
   submit(): void {
     if (this.form.invalid || this.loading()) {
@@ -57,6 +61,25 @@ export class LoginComponent {
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
         this.errorMessage.set(this.mapError(err));
+      }
+    });
+  }
+
+  loginComoDemo(): void {
+    if (this.loadingDemo() || this.loading()) {
+      return;
+    }
+
+    this.loadingDemo.set(true);
+    this.errorMessage.set(null);
+
+    this.auth.login({ email: this.DEMO_EMAIL, senha: this.DEMO_SENHA }).subscribe({
+      next: () => {
+        this.router.navigate(['/home']);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loadingDemo.set(false);
+        this.errorMessage.set(this.mapDemoError(err));
       }
     });
   }
@@ -91,5 +114,12 @@ export class LoginComponent {
       return 'Nao foi possivel conectar a API. Verifique sua conexao.';
     }
     return 'Erro ao efetuar login. Tente novamente.';
+  }
+
+  private mapDemoError(err: HttpErrorResponse): string {
+    if (err.status === 401) {
+      return 'Conta demo não disponível neste ambiente.';
+    }
+    return this.mapError(err);
   }
 }
