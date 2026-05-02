@@ -79,12 +79,19 @@ spring:
         transport:
           protocol: smtp
 
-# JWT - segredo via env var em ambientes remotos; default só para dev local
+# JWT - access token curto (15min). Renovação via refresh token (POST /api/auth/refresh).
+# Segredo via env var em ambientes remotos; default só para dev local.
 fiis:
   jwt:
     secret: ${FIIS_JWT_SECRET:chave-de-desenvolvimento-com-32-bytes-minimo-para-hs256}
-    ttl-millis: 86400000
+    ttl-millis: 900000
     issuer: fiis-api
+
+  # Refresh token (FASE 6.8): valor opaco e longo (7 dias por default), usado para
+  # renovar o access JWT sem re-login. Cada uso é rotacionado (single-use); tentar
+  # reusar dispara reuse detection e revoga todos os refreshes do usuário.
+  refresh-token:
+    ttl-dias: ${FIIS_REFRESH_TOKEN_TTL_DIAS:7}
 
   # Rate limiting in-memory (Bucket4j) nos endpoints públicos de autenticação.
   # login: por e-mail, protege contra brute force em uma conta específica.

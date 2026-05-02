@@ -59,6 +59,8 @@ public class AutenticacaoService {
 
     private final EmailService emailService;
 
+    private final RefreshTokenService refreshTokenService;
+
     @Value("${fiis.jwt.ttl-millis}")
     private long ttlMillis;
 
@@ -82,10 +84,12 @@ public class AutenticacaoService {
         Usuario usuario = userDetails.getUsuario();
 
         String token = jwtSupport.gerarToken(userDetails);
+        String refreshToken = refreshTokenService.emitir(usuario).rawToken();
 
         return new TokenResponse(
             token,
             TIPO_BEARER,
+            refreshToken,
             usuario.getNome(),
             usuario.getPerfil(),
             ttlMillis
@@ -127,14 +131,54 @@ public class AutenticacaoService {
 
         JwtUserDetails userDetails = new JwtUserDetails(salvo);
         String token = jwtSupport.gerarToken(userDetails);
+        String refreshToken = refreshTokenService.emitir(salvo).rawToken();
 
         return new TokenResponse(
             token,
             TIPO_BEARER,
+            refreshToken,
             salvo.getNome(),
             salvo.getPerfil(),
             ttlMillis
         );
+    }
+
+    /**
+     * Consome um refresh token válido, emite novo access JWT e novo refresh
+     * (rotação). Em caso de reuse detection, todos os refreshes ativos do
+     * usuário são revogados — ver {@link RefreshTokenService#rotacionar(String)}.
+     *
+     * @param refreshTokenRaw valor opaco recebido do cliente
+     * @return novo {@link TokenResponse} com access JWT renovado e refresh rotacionado
+     * @throws RegraNegocioException (FII0024) se o token for inválido, expirado,
+     *         revogado, ou se reuse for detectado
+     */
+    @Transactional
+    public TokenResponse refresh(final String refreshTokenRaw) {
+        RefreshTokenService.Rotacionado resultado = refreshTokenService.rotacionar(refreshTokenRaw);
+        Usuario usuario = resultado.usuario();
+
+        JwtUserDetails userDetails = new JwtUserDetails(usuario);
+        String novoAccess = jwtSupport.gerarToken(userDetails);
+
+        return new TokenResponse(
+            novoAccess,
+            TIPO_BEARER,
+            resultado.novoRefreshRaw(),
+            usuario.getNome(),
+            usuario.getPerfil(),
+            ttlMillis
+        );
+    }
+
+    /**
+     * Revoga o refresh token informado (logout). Idempotente: se o token não
+     * existe ou já estava revogado/usado, o método termina silenciosamente —
+     * cliente não distingue para evitar enumeração.
+     */
+    @Transactional
+    public void logout(final String refreshTokenRaw) {
+        refreshTokenService.revogar(refreshTokenRaw);
     }
 
     /**

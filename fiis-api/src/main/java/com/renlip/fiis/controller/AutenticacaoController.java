@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.renlip.fiis.domain.dto.TokenResponse;
 import com.renlip.fiis.domain.vo.CredencialVO;
 import com.renlip.fiis.domain.vo.EsqueciSenhaVO;
+import com.renlip.fiis.domain.vo.RefreshTokenVO;
 import com.renlip.fiis.domain.vo.ResetSenhaVO;
 import com.renlip.fiis.domain.vo.SignupVO;
 import com.renlip.fiis.service.AutenticacaoService;
@@ -52,6 +53,25 @@ public class AutenticacaoController {
             final HttpServletRequest request) {
         String ip = extrairIpCliente(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(autenticacaoService.signup(signup, ip));
+    }
+
+    @PostMapping(path = "/refresh", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Rotaciona o refresh token e devolve novo access JWT",
+        description = "Consome o refresh token recebido no login/signup, marca-o como usado e "
+            + "devolve um novo par (access JWT + refresh token). O novo refresh substitui o anterior. "
+            + "Se o token já tiver sido usado (sinal de roubo), todos os refreshes do usuário são revogados.")
+    public ResponseEntity<TokenResponse> refresh(@Valid @RequestBody final RefreshTokenVO body) {
+        return ResponseEntity.ok(autenticacaoService.refresh(body.refreshToken()));
+    }
+
+    @PostMapping(path = "/logout", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Revoga o refresh token (logout)",
+        description = "Revoga o refresh token informado, encerrando a sessão correspondente. "
+            + "Idempotente: se o token não existir ou já tiver sido revogado/usado, o método retorna "
+            + "204 No Content sem distinção (evita enumeração).")
+    public ResponseEntity<Void> logout(@Valid @RequestBody final RefreshTokenVO body) {
+        autenticacaoService.logout(body.refreshToken());
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping(path = "/forgot-password", consumes = MediaType.APPLICATION_JSON_VALUE)

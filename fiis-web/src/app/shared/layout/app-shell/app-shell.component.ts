@@ -76,7 +76,12 @@ export class AppShellComponent {
   }
 
   logout(): void {
-    this.auth.logout();
-    this.router.navigate(['/login']);
+    // O Observable retornado pelo auth.logout() emite uma vez (após revogar o
+    // refresh no backend ou imediatamente, se já não havia refresh) e completa.
+    // O finalize garante o redirect mesmo se a chamada HTTP falhar (rede caída):
+    // o estado local já foi limpo dentro do logout().
+    this.auth.logout().subscribe({
+      complete: () => this.router.navigate(['/login'])
+    });
   }
 }
