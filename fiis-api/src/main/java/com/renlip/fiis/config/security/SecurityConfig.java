@@ -33,6 +33,7 @@ public class SecurityConfig {
         "/swagger-ui/**",
         "/v3/api-docs/**",
         "/actuator/health",
+        "/actuator/info",
         "/error"
     };
 
@@ -74,7 +75,8 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(ROTAS_PUBLICAS).permitAll()
-                .requestMatchers("/api/jobs/**").hasRole("ADMIN")
+                .requestMatchers("/api/jobs/**", "/actuator/metrics/**", "/actuator/prometheus")
+                    .hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex

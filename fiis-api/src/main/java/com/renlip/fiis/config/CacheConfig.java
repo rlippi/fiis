@@ -37,13 +37,19 @@ public class CacheConfig {
      * cada cache nomeado. Tamanho e TTL são lidos de {@link CacheProperties} —
      * variáveis de ambiente {@code FIIS_CACHE_ULTIMA_COTACAO_*} sobrescrevem
      * sem redeploy.
+     *
+     * <p>{@code recordStats()} habilita as estatísticas do Caffeine (hits, misses,
+     * loads, evictions). O Spring Boot Actuator detecta isso automaticamente e
+     * expõe gauges como {@code cache.gets{result=hit|miss}}, {@code cache.size},
+     * {@code cache.evictions} em {@code /actuator/metrics} e {@code /actuator/prometheus}.</p>
      */
     @Bean
     public CacheManager cacheManager(final CacheProperties properties) {
         CaffeineCacheManager manager = new CaffeineCacheManager(CACHE_ULTIMA_COTACAO_POR_FUNDO);
         manager.setCaffeine(Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofMinutes(properties.ultimaCotacao().ttlMinutos()))
-            .maximumSize(properties.ultimaCotacao().maxSize()));
+            .maximumSize(properties.ultimaCotacao().maxSize())
+            .recordStats());
         return manager;
     }
 }
