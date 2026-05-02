@@ -1,94 +1,65 @@
 package com.renlip.fiis.support;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
-import com.renlip.fiis.config.BrapiProperties;
 import com.renlip.fiis.domain.dto.brapi.BrapiQuote;
 import com.renlip.fiis.domain.dto.brapi.BrapiQuoteResponse;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import lombok.RequiredArgsConstructor;
+
 /**
- * Cliente HTTP para a BRAPI (https://brapi.dev).
+ * Cliente HTTP para a BRAPI (https://brapi.dev) — orquestra a busca de
+ * múltiplos tickers em uma única chamada lógica.
  *
- * <p>Encapsula o {@link RestClient} do Spring e expõe um método por endpoint
- * consumido. Mantém o restante da aplicação alheio aos detalhes de protocolo
- * (URL, serialização, token query string) — services e controllers dependem
- * apenas desta classe.</p>
+ * <p>Esta classe não faz a chamada HTTP em si; isso fica a cargo de
+ * {@link BrapiTickerFetcher}, que aplica Resilience4j por chamada individual.
+ * Aqui apenas iteramos sobre os tickers solicitados, agregamos os resultados
+ * encontrados e traduzimos o caso "circuit breaker aberto" para
+ * {@link RestClientException}, mantendo o contrato externo único:
+ * <i>tudo o que falha de forma irrecuperável vira {@code RestClientException}</i>.</p>
  *
- * <p>O {@code RestClient} é construído uma vez no construtor, com a URL base
- * vinda de {@link BrapiProperties}. O token é anexado como query parameter
- * quando presente, seguindo a convenção oficial da BRAPI.</p>
- *
- * <p><b>Free tier:</b> o plano gratuito da BRAPI permite apenas 1 ativo por
- * requisição. Para suportar carteiras com múltiplos fundos, {@link #buscarCotacoes(List)}
- * faz uma chamada por ticker em loop e consolida o resultado. Planos pagos
- * aceitariam múltiplos tickers separados por vírgula numa única chamada, mas
- * a implementação atual prioriza o caso grátis.</p>
+ * <p><b>Free tier da BRAPI:</b> 1 ativo por requisição. Carteiras com múltiplos
+ * fundos resultam em N chamadas HTTP — cada uma protegida individualmente
+ * pelo Retry e contribuindo para a janela do circuit breaker.</p>
  */
 @Component
+@RequiredArgsConstructor
 public class BrapiClient {
 
-    private static final Logger log = LoggerFactory.getLogger(BrapiClient.class);
-
-    private final BrapiProperties properties;
-
-    private final RestClient restClient;
-
-    public BrapiClient(final BrapiProperties properties) {
-        this.properties = properties;
-        this.restClient = RestClient.builder()
-            .baseUrl(properties.url())
-            .build();
-    }
+    private final BrapiTickerFetcher tickerFetcher;
 
     /**
      * Busca na BRAPI a cotação atual de múltiplos tickers.
      *
-     * <p>Itera sobre a lista e faz uma requisição por ticker (exigência do
-     * plano gratuito). Qualquer resposta 4xx para um ticker específico é
-     * logada e ignorada — o serviço chamador reporta esses casos em
-     * {@code naoEncontradosBrapi}. Falhas 5xx, timeouts e erros de conexão
-     * propagam como {@code RestClientException} e interrompem o processamento.</p>
+     * <p>Cada ticker é buscado individualmente via {@link BrapiTickerFetcher},
+     * que aplica Retry e CircuitBreaker. Tickers ausentes (4xx) já viram
+     * {@link Optional#empty()} no fetcher e não aparecem no resultado — o
+     * caller compara com a lista solicitada para identificar os que faltaram.</p>
      *
      * @param tickers lista de códigos de negociação (ex: {@code ["HGLG11", "KNCR11"]})
      * @return envelope com as cotações encontradas (subset dos tickers solicitados)
+     * @throws RestClientException quando o circuit breaker bloqueou a chamada
+     *         (BRAPI está sendo identificada como indisponível) ou quando uma
+     *         falha transitória 5xx/timeout esgotou o retry
      */
     public BrapiQuoteResponse buscarCotacoes(final List<String> tickers) {
-        List<BrapiQuote> encontradas = new ArrayList<>();
-
-        for (String ticker : tickers) {
-            try {
-                BrapiQuoteResponse resposta = restClient.get()
-                    .uri(uriBuilder -> {
-                        uriBuilder.path("/api/quote/{ticker}");
-                        if (StringUtils.hasText(properties.token())) {
-                            uriBuilder.queryParam("token", properties.token());
-                        }
-                        return uriBuilder.build(ticker);
-                    })
-                    .retrieve()
-                    .body(BrapiQuoteResponse.class);
-
-                if (resposta != null && resposta.results() != null) {
-                    encontradas.addAll(resposta.results());
-                }
-            } catch (HttpClientErrorException ex) {
-                // Qualquer 4xx para um ticker específico significa "esse ticker
-                // não está disponível agora" — 404 (inexistente), 400 (formato
-                // inválido), 402 (excedeu quota), etc. O service reportará o
-                // ticker em naoEncontradosBrapi ao comparar com a lista original.
-                log.warn("BRAPI rejeitou ticker {} com status {}: {}",
-                    ticker, ex.getStatusCode(), ex.getResponseBodyAsString());
-            }
+        try {
+            List<BrapiQuote> encontradas = tickers.stream()
+                .map(tickerFetcher::buscarTicker)
+                .flatMap(Optional::stream)
+                .toList();
+            return new BrapiQuoteResponse(encontradas);
+        } catch (CallNotPermittedException ex) {
+            // CB aberto: traduz para a mesma RestClientException que sinaliza
+            // BRAPI indisponível, mantendo o contrato consumido pelo
+            // CotacaoService (que mapeia para COTACAO_BRAPI_INDISPONIVEL).
+            throw new RestClientException(
+                "Circuit breaker aberto para BRAPI: " + ex.getMessage(), ex);
         }
-
-        return new BrapiQuoteResponse(encontradas);
     }
 }

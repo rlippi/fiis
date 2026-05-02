@@ -2,6 +2,7 @@ package com.renlip.fiis.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
 /**
@@ -27,6 +28,14 @@ public record BrapiProperties(
     /**
      * Token opcional para autenticação no plano pago. Pode ser nulo ou vazio.
      */
-    String token
+    String token,
+
+    /**
+     * Timeout em milissegundos aplicado tanto ao connect quanto ao read da
+     * chamada HTTP à BRAPI. Usado pelo {@code RestClient} construído no
+     * {@code BrapiTickerFetcher}. Default razoável: 5000ms — BRAPI normalmente
+     * responde em menos de 1s, então 5s já é folga suficiente para variações.
+     */
+    @Min(100) int timeoutMillis
 ) {
 }

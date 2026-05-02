@@ -145,9 +145,57 @@ fiis:
 # BRAPI - integração com cotações do mercado (https://brapi.dev)
 # token é opcional: free tier funciona sem autenticação. Se preenchido, é
 # enviado como query string para usar o rate limit do plano pago.
+# timeout-millis aplica-se tanto ao connect quanto ao read da chamada HTTP.
 brapi:
   url: ${BRAPI_URL:https://brapi.dev}
   token: ${BRAPI_TOKEN:}
+  timeout-millis: ${BRAPI_TIMEOUT_MS:5000}
+
+# Resilience4j: tolerância a falhas para chamadas externas.
+#
+# A instância "brapi" é referenciada pelas annotations @Retry e @CircuitBreaker
+# em BrapiTickerFetcher#buscarTicker. Os patterns são empilhados na ordem default
+# do framework: Retry envolve CircuitBreaker, ou seja, o retry roda primeiro e,
+# se o CB estiver aberto, sua CallNotPermittedException é capturada por
+# `ignore-exceptions` para não iniciar uma nova rodada de retries.
+#
+# Retry:
+#   - 3 tentativas (1 original + 2 retries) com backoff exponencial 500ms→1s→2s
+#   - retry-exceptions: 5xx (HttpServerErrorException) e timeouts/conn (ResourceAccessException)
+#   - 4xx NÃO retenta (já é Optional.empty no fetcher, nem chega aqui)
+#   - ignore-exceptions: CallNotPermittedException — se o CB bloqueou, não retentar
+#
+# CircuitBreaker (sliding-window contagem-baseada):
+#   - sliding-window-size=10: olha as últimas 10 chamadas
+#   - minimum-number-of-calls=5: precisa de pelo menos 5 chamadas antes de avaliar
+#   - failure-rate-threshold=50%: abre se metade das últimas 10 falharem
+#   - wait-duration-in-open-state=30s: tempo aberto antes de tentar half-open
+#   - permitted-number-of-calls-in-half-open-state=3: chamadas-piloto para decidir
+#     se volta a fechar (sucesso) ou reabre (falha)
+#   - automatic-transition-from-open-to-half-open-enabled=true: timer dispara
+#     a transição sozinho, sem precisar de chamada externa que "acorde" o estado
+resilience4j:
+  retry:
+    instances:
+      brapi:
+        max-attempts: 3
+        wait-duration: 500ms
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - org.springframework.web.client.ResourceAccessException
+        ignore-exceptions:
+          - io.github.resilience4j.circuitbreaker.CallNotPermittedException
+  circuitbreaker:
+    instances:
+      brapi:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
 
 # Swagger UI - ordenação alfabética das tags (deixa "Autenticação" no topo)
 springdoc:
