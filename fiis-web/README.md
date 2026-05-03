@@ -1,42 +1,45 @@
 # fiis-web
 
-Frontend do sistema de controle de investimentos em FIIs.
+Frontend do gerenciador de carteira de FIIs.
 
-**Stack:** Angular 21 · PrimeNG 21 · Signals · SCSS
+**Stack:** Angular 21 (standalone, signals, zoneless) · PrimeNG 21 (Aura) · Chart.js · SCSS · Vitest
 
-Arquitetura detalhada: [ARCHITECTURE.md](./ARCHITECTURE.md).
+> Para a visão geral do projeto e setup completo (backend + frontend + Docker), veja o [README na raiz](../README.md). Decisões de arquitetura interna estão em [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
 ## Como rodar
 
 ```bash
-npm install
+npm install     # primeira vez
 npm start
 ```
 
-Abre em `http://localhost:4200` (ou outra porta se a 4200 estiver ocupada).
+Disponível em `http://localhost:4200`.
 
 ## Scripts
 
 | Script | O que faz |
 |---|---|
-| `npm start` | Dev server com hot reload (`ng serve`) |
-| `npm run build` | Build de produção |
-| `npm run watch` | Build dev em modo watch |
+| `npm start` | Dev server com hot reload, aponta para a API local em `http://localhost:8081` |
+| `npm run start:hml` | Dev server apontando para a API em HML (`https://fiis-api-hml.onrender.com`) |
+| `npm run build` | Build de produção (env `production`) |
+| `npm run build:hml` | Build apontando para a API HML — usado pelo Vercel |
 | `npm test` | Roda os testes (Vitest) |
 
-## Tema claro/escuro/sistema
+## Tema claro / escuro / sistema
 
-O app suporta 3 modos: **Sistema** (default — segue o OS), **Claro** e **Escuro**. A preferência é persistida em `localStorage` e gerenciada pelo `ThemeService` (ver `src/app/core/services/theme.service.ts`).
+3 modos persistidos em `localStorage` e gerenciados pelo `ThemeService` ([core/services/theme.service.ts](src/app/core/services/theme.service.ts)).
 
-## Integração com o backend (fiis-api)
+## Integração com o backend
 
-| Ambiente | URL |
-|---|---|
-| Dev local | `http://localhost:8081` |
-| HML | `https://fiis-api-hml.onrender.com` |
-
-As URLs são configuradas via `src/environments/` (a ser adicionado).
+| Ambiente | URL da API | Configurado em |
+|---|---|---|
+| Dev local | `http://localhost:8081` | `src/environments/environment.ts` |
+| HML | `https://fiis-api-hml.onrender.com` | `src/environments/environment.hml.ts` |
 
 ## Estrutura de código
 
-Resumo: `src/app/core` (infra), `src/app/shared` (reutilizáveis), `src/app/features` (domínios). Detalhes e regras de dependência em [ARCHITECTURE.md](./ARCHITECTURE.md).
+- `src/app/core` — services, guards, interceptors, models compartilhados
+- `src/app/shared` — layout (sidebar, header) e componentes reutilizáveis
+- `src/app/features/<dominio>` — domínios isolados (auth, fundos, operacoes, proventos, cotacoes, eventos, relatorios)
+
+Regras de dependência detalhadas em [`ARCHITECTURE.md`](./ARCHITECTURE.md).
