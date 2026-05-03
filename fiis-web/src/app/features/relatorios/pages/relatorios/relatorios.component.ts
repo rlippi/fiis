@@ -1,6 +1,6 @@
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -60,12 +60,26 @@ export class RelatoriosComponent implements OnInit {
   protected readonly exportandoPdf = signal(false);
   protected readonly exportandoXlsx = signal(false);
 
+  protected readonly alocacaoTipo = signal<AlocacaoDTO[]>([]);
+  protected readonly alocacaoSegmento = signal<AlocacaoDTO[]>([]);
+  protected readonly rendaMensal = signal<RendaMensalDTO[]>([]);
+
   protected readonly chartTipo = signal<unknown>(null);
   protected readonly chartSegmento = signal<unknown>(null);
   protected readonly chartRendaMensal = signal<unknown>(null);
 
   protected readonly pieOptions = this.buildPieOptions();
   protected readonly barOptions = this.buildBarOptions();
+
+  protected readonly alocacaoTipoAriaLabel = computed(() =>
+    this.descreverAlocacao('Alocação por tipo de fundo', this.alocacaoTipo())
+  );
+  protected readonly alocacaoSegmentoAriaLabel = computed(() =>
+    this.descreverAlocacao('Alocação por segmento', this.alocacaoSegmento())
+  );
+  protected readonly rendaMensalAriaLabel = computed(() =>
+    this.descreverRendaMensal(this.rendaMensal())
+  );
 
   ngOnInit(): void {
     forkJoin({
@@ -77,6 +91,9 @@ export class RelatoriosComponent implements OnInit {
     }).subscribe({
       next: (d) => {
         this.resumo.set(d.resumo);
+        this.alocacaoTipo.set(d.porTipo);
+        this.alocacaoSegmento.set(d.porSegmento);
+        this.rendaMensal.set(d.rendaMensal);
         this.chartTipo.set(this.buildPizzaData(d.porTipo));
         this.chartSegmento.set(this.buildPizzaData(d.porSegmento));
         this.chartRendaMensal.set(this.buildBarrasData(d.rendaMensal));
@@ -234,5 +251,26 @@ export class RelatoriosComponent implements OnInit {
     if (!disposition) return null;
     const match = /filename="?([^"]+)"?/.exec(disposition);
     return match ? match[1] : null;
+  }
+
+  private descreverAlocacao(titulo: string, items: AlocacaoDTO[]): string {
+    if (!items.length) return `${titulo}: sem dados`;
+    const partes = items.map(
+      (i) => `${i.categoriaDescricao} ${i.percentual.toFixed(2).replace('.', ',')}%`
+    );
+    return `${titulo}: ${partes.join(', ')}.`;
+  }
+
+  private descreverRendaMensal(items: RendaMensalDTO[]): string {
+    if (!items.length) return 'Renda mensal: sem dados';
+    const ordenado = [...items].reverse();
+    const partes = ordenado.map((i) => {
+      const valor = i.totalRecebido.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      });
+      return `${i.nomeMes.substring(0, 3)}/${String(i.ano).slice(-2)} ${valor}`;
+    });
+    return `Renda mensal: ${partes.join(', ')}.`;
   }
 }

@@ -130,24 +130,27 @@
     <div class="charts-row">
       <p-card styleClass="chart-card">
         <ng-template #title>Alocação por tipo</ng-template>
-        <div class="chart-container">
+        <figure role="img" [attr.aria-label]="alocacaoTipoAriaLabel()" class="chart-container">
           <p-chart type="doughnut" [data]="chartTipo()" [options]="pieOptions" />
-        </div>
+          <figcaption class="sr-only">{{ alocacaoTipoAriaLabel() }}</figcaption>
+        </figure>
       </p-card>
 
       <p-card styleClass="chart-card">
         <ng-template #title>Alocação por segmento</ng-template>
-        <div class="chart-container">
+        <figure role="img" [attr.aria-label]="alocacaoSegmentoAriaLabel()" class="chart-container">
           <p-chart type="doughnut" [data]="chartSegmento()" [options]="pieOptions" />
-        </div>
+          <figcaption class="sr-only">{{ alocacaoSegmentoAriaLabel() }}</figcaption>
+        </figure>
       </p-card>
     </div>
 
     <p-card styleClass="chart-card">
       <ng-template #title>Renda mensal</ng-template>
-      <div class="chart-container chart-tall">
+      <figure role="img" [attr.aria-label]="rendaMensalAriaLabel()" class="chart-container chart-tall">
         <p-chart type="bar" [data]="chartRendaMensal()" [options]="barOptions" />
-      </div>
+        <figcaption class="sr-only">{{ rendaMensalAriaLabel() }}</figcaption>
+      </figure>
     </p-card>
 
     <p-card styleClass="chart-card">

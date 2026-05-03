@@ -39,6 +39,7 @@
             pInputText
             type="text"
             placeholder="Buscar por ticker, tipo, descrição..."
+            aria-label="Buscar por ticker, tipo ou descrição"
             [(ngModel)]="globalFilter"
             (input)="dt.filterGlobal(globalFilter(), 'contains')"
           />

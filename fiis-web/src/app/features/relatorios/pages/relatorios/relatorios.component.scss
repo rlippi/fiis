@@ -74,7 +74,10 @@
   gap: 1rem;
 }
 
+// figure tem margin default do user-agent (≈40px laterais);
+// como aqui o figure substitui o div container do chart, zeramos.
 .chart-container {
+  margin: 0;
   position: relative;
   height: 280px;
 }
