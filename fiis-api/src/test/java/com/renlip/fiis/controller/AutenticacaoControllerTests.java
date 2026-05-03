@@ -13,12 +13,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renlip.fiis.domain.entity.Usuario;
 import com.renlip.fiis.domain.enumeration.Perfil;
 import com.renlip.fiis.repository.UsuarioRepository;
+import com.renlip.fiis.support.RateLimitSupport;
 import com.renlip.fiis.util.JsonUtils;
 
 /**
@@ -30,6 +33,7 @@ import com.renlip.fiis.util.JsonUtils;
  */
 @WithAnonymousUser
 @DisplayName("AutenticacaoController")
+@Sql(value = "/fixtures/setup.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
 class AutenticacaoControllerTests extends AbstractControllerTests {
 
     private static final String SENHA_VALIDA = "senha123";
@@ -45,8 +49,12 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private RateLimitSupport rateLimit;
+
     @BeforeEach
     void prepararUsuariosDeTeste() {
+        rateLimit.limpar();
         usuarioRepository.deleteAll();
         usuarioRepository.save(Usuario.builder()
             .email(EMAIL_ATIVO)
@@ -65,7 +73,7 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
     }
 
     @Nested
-    @DisplayName("POST /auth/login")
+    @DisplayName("POST /api/auth/login")
     class Login {
 
         @Nested
@@ -78,7 +86,7 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
                 String body = JsonUtils.readFile("scenarios/auth/success/01-login-sucesso/actual.json");
 
                 String json = new String(
-                    restTestClient.post("/auth/login", body)
+                    restTestClient.post("/api/auth/login", body)
                         .expectStatus(HttpStatus.OK)
                         .getResult()
                         .getResponse()
@@ -102,7 +110,7 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
             @DisplayName("retorna 401 quando a senha está errada")
             void testSenhaErrada() throws IOException {
                 String body = JsonUtils.readFile("scenarios/auth/failure/01-senha-errada/actual.json");
-                restTestClient.post("/auth/login", body)
+                restTestClient.post("/api/auth/login", body)
                     .expectStatus(HttpStatus.UNAUTHORIZED)
                     .expectBody("scenarios/auth/failure/01-senha-errada/expected.json");
             }
@@ -111,7 +119,7 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
             @DisplayName("retorna 401 quando o e-mail não existe")
             void testEmailNaoExiste() throws IOException {
                 String body = JsonUtils.readFile("scenarios/auth/failure/02-email-nao-existe/actual.json");
-                restTestClient.post("/auth/login", body)
+                restTestClient.post("/api/auth/login", body)
                     .expectStatus(HttpStatus.UNAUTHORIZED)
                     .expectBody("scenarios/auth/failure/02-email-nao-existe/expected.json");
             }
@@ -120,7 +128,7 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
             @DisplayName("retorna 400 quando o e-mail é inválido")
             void testEmailInvalido() throws IOException {
                 String body = JsonUtils.readFile("scenarios/auth/failure/03-email-invalido/actual.json");
-                restTestClient.post("/auth/login", body)
+                restTestClient.post("/api/auth/login", body)
                     .expectStatus(HttpStatus.BAD_REQUEST)
                     .expectBody("scenarios/auth/failure/03-email-invalido/expected.json");
             }
@@ -129,7 +137,7 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
             @DisplayName("retorna 400 quando e-mail e senha estão em branco")
             void testCamposObrigatorios() throws IOException {
                 String body = JsonUtils.readFile("scenarios/auth/failure/04-campos-obrigatorios/actual.json");
-                restTestClient.post("/auth/login", body)
+                restTestClient.post("/api/auth/login", body)
                     .expectStatus(HttpStatus.BAD_REQUEST)
                     .expectBody("scenarios/auth/failure/04-campos-obrigatorios/expected.json");
             }
@@ -138,9 +146,134 @@ class AutenticacaoControllerTests extends AbstractControllerTests {
             @DisplayName("retorna 401 quando o usuário está inativo")
             void testUsuarioInativo() throws IOException {
                 String body = JsonUtils.readFile("scenarios/auth/failure/05-usuario-inativo/actual.json");
-                restTestClient.post("/auth/login", body)
+                restTestClient.post("/api/auth/login", body)
                     .expectStatus(HttpStatus.UNAUTHORIZED)
                     .expectBody("scenarios/auth/failure/05-usuario-inativo/expected.json");
+            }
+
+            @Test
+            @DisplayName("[429 Too Many Requests] após 5 tentativas com senha errada, a 6ª é bloqueada por rate limit")
+            void testRateLimitLogin() throws IOException {
+                String body = JsonUtils.readFile("scenarios/auth/failure/01-senha-errada/actual.json");
+
+                for (int i = 0; i < 5; i++) {
+                    restTestClient.post("/api/auth/login", body)
+                        .expectStatus(HttpStatus.UNAUTHORIZED);
+                }
+
+                restTestClient.post("/api/auth/login", body)
+                    .expectStatus(HttpStatus.TOO_MANY_REQUESTS)
+                    .expectBody("scenarios/auth/failure/07-rate-limit-login/expected.json");
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/auth/signup")
+    class Signup {
+
+        @Nested
+        @DisplayName("cenários de sucesso")
+        class SignupSuccess {
+
+            @Test
+            @DisplayName("[201 Created] cadastra usuário e retorna token JWT pronto para uso")
+            void testSignupComSucesso() throws Exception {
+                String body = JsonUtils.readFile("scenarios/auth/signup/success/01-signup-sucesso/actual.json");
+
+                String json = new String(
+                    restTestClient.post("/api/auth/signup", body)
+                        .expectStatus(HttpStatus.CREATED)
+                        .getResult()
+                        .getResponse()
+                        .getContentAsByteArray(),
+                    StandardCharsets.UTF_8);
+
+                JsonNode response = objectMapper.readTree(json);
+                assertThat(response.get("token").asText()).isNotBlank();
+                assertThat(response.get("tipo").asText()).isEqualTo("Bearer");
+                assertThat(response.get("nome").asText()).isEqualTo("Novo Usuário");
+                assertThat(response.get("perfil").asText()).isEqualTo("USER");
+                assertThat(response.get("expiraEmMs").asLong()).isPositive();
+
+                assertThat(usuarioRepository.findByEmail("novo@fiis.com")).isPresent();
+            }
+        }
+
+        @Nested
+        @DisplayName("cenários de falha")
+        class SignupFailure {
+
+            @Test
+            @DisplayName("[409 Conflict] quando o e-mail já está cadastrado")
+            void testSignupEmailDuplicado() throws IOException {
+                String body = JsonUtils.readFile("scenarios/auth/signup/failure/01-email-ja-cadastrado/actual.json");
+                restTestClient.post("/api/auth/signup", body)
+                    .expectStatus(HttpStatus.CONFLICT)
+                    .expectBody("scenarios/auth/signup/failure/01-email-ja-cadastrado/expected.json");
+            }
+
+            @Test
+            @DisplayName("[400 Bad Request] quando a senha tem menos que 8 caracteres")
+            void testSignupSenhaCurta() throws IOException {
+                String body = JsonUtils.readFile("scenarios/auth/signup/failure/02-senha-curta/actual.json");
+                restTestClient.post("/api/auth/signup", body)
+                    .expectStatus(HttpStatus.BAD_REQUEST)
+                    .expectBody("scenarios/auth/signup/failure/02-senha-curta/expected.json");
+            }
+
+            @Test
+            @DisplayName("[400 Bad Request] quando campos obrigatórios estão em branco")
+            void testSignupCamposObrigatorios() throws IOException {
+                String body = JsonUtils.readFile("scenarios/auth/signup/failure/03-campos-obrigatorios/actual.json");
+                restTestClient.post("/api/auth/signup", body)
+                    .expectStatus(HttpStatus.BAD_REQUEST)
+                    .expectBody("scenarios/auth/signup/failure/03-campos-obrigatorios/expected.json");
+            }
+
+            @Test
+            @DisplayName("[400 Bad Request] quando a senha não tem nenhuma letra")
+            void testSignupSenhaSemLetra() throws IOException {
+                String body = JsonUtils.readFile("scenarios/auth/signup/failure/04-senha-sem-letra/actual.json");
+                restTestClient.post("/api/auth/signup", body)
+                    .expectStatus(HttpStatus.BAD_REQUEST)
+                    .expectBody("scenarios/auth/signup/failure/04-senha-sem-letra/expected.json");
+            }
+
+            @Test
+            @DisplayName("[400 Bad Request] quando a senha não tem nenhum número")
+            void testSignupSenhaSemNumero() throws IOException {
+                String body = JsonUtils.readFile("scenarios/auth/signup/failure/05-senha-sem-numero/actual.json");
+                restTestClient.post("/api/auth/signup", body)
+                    .expectStatus(HttpStatus.BAD_REQUEST)
+                    .expectBody("scenarios/auth/signup/failure/05-senha-sem-numero/expected.json");
+            }
+
+            @Test
+            @DisplayName("[429 Too Many Requests] após 3 cadastros do mesmo IP, o 4º é bloqueado por rate limit")
+            void testRateLimitSignup() {
+                for (int i = 0; i < 3; i++) {
+                    String body = """
+                        {
+                            "nome": "Novo Usuário %d",
+                            "email": "signup-rl-%d@fiis.com",
+                            "senha": "senha123"
+                        }
+                        """.formatted(i, i);
+                    restTestClient.post("/api/auth/signup", body)
+                        .expectStatus(HttpStatus.CREATED);
+                }
+
+                String bodyEstourado = """
+                    {
+                        "nome": "Estourado",
+                        "email": "signup-rl-estourado@fiis.com",
+                        "senha": "senha123"
+                    }
+                    """;
+                restTestClient.post("/api/auth/signup", bodyEstourado)
+                    .expectStatus(HttpStatus.TOO_MANY_REQUESTS)
+                    .expectBody("scenarios/auth/signup/failure/06-rate-limit-signup/expected.json");
             }
         }
     }

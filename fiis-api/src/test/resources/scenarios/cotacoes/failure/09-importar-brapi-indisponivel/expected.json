@@ -1,0 +1,7 @@
+{
+    "status": 409,
+    "erro": "Conflict",
+    "codigo": "FII0020",
+    "mensagem": "Não foi possível obter cotações da BRAPI no momento. Tente novamente em alguns minutos.",
+    "path": "/api/cotacoes/importar-brapi"
+}

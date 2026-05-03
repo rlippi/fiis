@@ -1,0 +1,81 @@
+<div class="signup-page">
+  <div class="theme-toggle">
+    <p-button
+      [icon]="themeIcon"
+      (onClick)="cycleTheme()"
+      [rounded]="true"
+      [text]="true"
+      severity="secondary"
+      [ariaLabel]="'Alternar tema (atual: ' + themeMode() + ')'"
+    />
+  </div>
+
+  <main class="signup-shell" id="main">
+    <header class="signup-header">
+      <h1>FIIs</h1>
+      <p>Crie sua conta para gerenciar sua carteira</p>
+    </header>
+
+    <p-card styleClass="signup-card">
+      <form [formGroup]="form" (ngSubmit)="submit()" class="signup-form">
+        <div class="field">
+          <label for="nome">Nome</label>
+          <input
+            pInputText
+            id="nome"
+            type="text"
+            formControlName="nome"
+            placeholder="Seu nome completo"
+            autocomplete="name"
+            maxlength="100"
+          />
+        </div>
+
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input
+            pInputText
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="seu@email.com"
+            autocomplete="email"
+            maxlength="150"
+          />
+        </div>
+
+        <div class="field">
+          <label for="senha">Senha</label>
+          <p-password
+            inputId="senha"
+            formControlName="senha"
+            [toggleMask]="true"
+            [feedback]="false"
+            placeholder="Mínimo 8 caracteres"
+            styleClass="full-width"
+          />
+          <small class="hint">
+            Mínimo 8 caracteres, com pelo menos uma letra e um número.
+          </small>
+        </div>
+
+        @if (errorMessage()) {
+          <p-message severity="error" [text]="errorMessage()!" />
+        }
+
+        <p-button
+          type="submit"
+          label="Criar conta"
+          icon="pi pi-user-plus"
+          [loading]="loading()"
+          [disabled]="form.invalid"
+          styleClass="submit-button"
+        />
+
+        <p class="login-link">
+          Já tem conta? <a routerLink="/login">Entrar</a>
+        </p>
+      </form>
+    </p-card>
+  </main>
+</div>

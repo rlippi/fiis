@@ -13,8 +13,9 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      # "update" ainda é seguro em homologação
-      ddl-auto: update
+      # "validate" apenas confere se o schema do banco bate com as @Entity;
+      # quem cria/altera tabelas é o Flyway (ver application.yml).
+      ddl-auto: validate
     show-sql: true
 
 logging:

@@ -1,0 +1,85 @@
+<div class="login-page">
+  <div class="theme-toggle">
+    <p-button
+      [icon]="themeIcon"
+      (onClick)="cycleTheme()"
+      [rounded]="true"
+      [text]="true"
+      severity="secondary"
+      [ariaLabel]="'Alternar tema (atual: ' + themeMode() + ')'"
+    />
+  </div>
+
+  <main class="login-shell" id="main">
+    <header class="login-header">
+      <h1>FIIs</h1>
+      <p>Carteira de Fundos Imobiliários</p>
+    </header>
+
+    <p-card styleClass="login-card">
+      <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input
+            pInputText
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="seu@email.com"
+            autocomplete="email"
+          />
+        </div>
+
+        <div class="field">
+          <label for="senha">Senha</label>
+          <p-password
+            inputId="senha"
+            formControlName="senha"
+            [toggleMask]="true"
+            [feedback]="false"
+            placeholder="Digite sua senha"
+            styleClass="full-width"
+          />
+        </div>
+
+        @if (errorMessage()) {
+          <p-message severity="error" [text]="errorMessage()!" />
+        }
+
+        <p-button
+          type="submit"
+          label="Entrar"
+          icon="pi pi-sign-in"
+          [loading]="loading()"
+          [disabled]="form.invalid"
+          styleClass="submit-button"
+        />
+
+        <div class="demo-divider">
+          <span>ou</span>
+        </div>
+
+        <p class="demo-hint">Sem cadastro? Veja o app com dados de exemplo:</p>
+        <p-button
+          type="button"
+          label="Acessar conta demo"
+          icon="pi pi-eye"
+          severity="secondary"
+          [outlined]="true"
+          [loading]="loadingDemo()"
+          [disabled]="loading()"
+          (onClick)="loginComoDemo()"
+          styleClass="submit-button"
+        />
+
+        <p class="forgot-link">
+          <a routerLink="/esqueci-senha">Esqueci minha senha</a>
+        </p>
+
+        <p class="signup-link">
+          Não tem conta? <a routerLink="/signup">Criar conta</a>
+        </p>
+      </form>
+    </p-card>
+  </main>
+</div>

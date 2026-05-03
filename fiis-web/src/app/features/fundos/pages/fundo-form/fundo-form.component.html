@@ -1,0 +1,127 @@
+<section class="fundo-form">
+  <p-card>
+    <ng-template #title>{{ titulo() }}</ng-template>
+
+    @if (loading()) {
+      <p class="muted">Carregando...</p>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+        <div class="field span-6">
+          <label for="ticker">Ticker *</label>
+          <input
+            pInputText
+            id="ticker"
+            type="text"
+            formControlName="ticker"
+            placeholder="Ex: HGLG11"
+            maxlength="10"
+            autocomplete="off"
+            [class.ng-invalid]="form.controls.ticker.invalid && form.controls.ticker.touched"
+          />
+          @if (form.controls.ticker.touched && form.controls.ticker.errors) {
+            <small class="error">
+              @if (form.controls.ticker.errors['required']) {
+                Ticker é obrigatório.
+              } @else if (form.controls.ticker.errors['pattern']) {
+                Apenas letras maiúsculas e números.
+              } @else if (form.controls.ticker.errors['minlength']) {
+                Mínimo 4 caracteres.
+              } @else if (form.controls.ticker.errors['maxlength']) {
+                Máximo 10 caracteres.
+              }
+            </small>
+          }
+        </div>
+
+        <div class="field span-6">
+          <label for="cnpj">CNPJ</label>
+          <p-inputmask
+            inputId="cnpj"
+            formControlName="cnpj"
+            mask="99.999.999/9999-99"
+            placeholder="00.000.000/0000-00"
+            [unmask]="true"
+          />
+        </div>
+
+        <div class="field span-12">
+          <label for="nome">Nome *</label>
+          <input
+            pInputText
+            id="nome"
+            type="text"
+            formControlName="nome"
+            placeholder="Ex: CSHG Logística FII"
+            maxlength="150"
+            [class.ng-invalid]="form.controls.nome.invalid && form.controls.nome.touched"
+          />
+          @if (form.controls.nome.touched && form.controls.nome.errors) {
+            <small class="error">
+              @if (form.controls.nome.errors['required']) {
+                Nome é obrigatório.
+              } @else if (form.controls.nome.errors['maxlength']) {
+                Máximo 150 caracteres.
+              }
+            </small>
+          }
+        </div>
+
+        <div class="field span-6">
+          <label for="tipo">Tipo *</label>
+          <p-select
+            inputId="tipo"
+            formControlName="tipo"
+            [options]="tipos"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecione"
+            appendTo="body"
+          />
+          @if (form.controls.tipo.touched && form.controls.tipo.errors?.['required']) {
+            <small class="error">Tipo é obrigatório.</small>
+          }
+        </div>
+
+        <div class="field span-6">
+          <label for="segmento">Segmento *</label>
+          <p-select
+            inputId="segmento"
+            formControlName="segmento"
+            [options]="segmentos"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecione"
+            appendTo="body"
+          />
+          @if (form.controls.segmento.touched && form.controls.segmento.errors?.['required']) {
+            <small class="error">Segmento é obrigatório.</small>
+          }
+        </div>
+
+        <div class="field span-12 ativo-field">
+          <label for="ativo">
+            <p-toggleswitch inputId="ativo" formControlName="ativo" />
+            <span>Ativo na carteira</span>
+          </label>
+        </div>
+
+        <div class="actions span-12">
+          <p-button
+            type="button"
+            label="Cancelar"
+            severity="secondary"
+            [text]="true"
+            [routerLink]="['/fundos']"
+          />
+          <p-button
+            type="submit"
+            label="Salvar"
+            icon="pi pi-check"
+            [loading]="saving()"
+            [disabled]="form.invalid"
+          />
+        </div>
+      </form>
+    }
+  </p-card>
+</section>

@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.renlip.fiis.domain.dto.AlocacaoResponse;
-import com.renlip.fiis.domain.dto.FundoResumoResponse;
 import com.renlip.fiis.domain.dto.PosicaoResponse;
 import com.renlip.fiis.domain.dto.RendaMensalResponse;
 import com.renlip.fiis.domain.dto.RendaPorFundoResponse;
@@ -24,6 +23,7 @@ import com.renlip.fiis.domain.entity.Fundo;
 import com.renlip.fiis.domain.mapper.FundoResumoMapper;
 import com.renlip.fiis.repository.FundoRepository;
 import com.renlip.fiis.repository.ProventoRepository;
+import com.renlip.fiis.support.UsuarioLogadoSupport;
 
 import static com.renlip.fiis.constant.EscalaConstants.ESCALA_MONETARIA;
 
@@ -34,6 +34,10 @@ import lombok.RequiredArgsConstructor;
  *
  * <p>Agrupa operações, proventos e posições para gerar visões resumidas
  * que alimentam o dashboard do frontend.</p>
+ *
+ * <p><b>Multi-usuário:</b> todas as agregações são sempre no escopo do usuário
+ * autenticado — admin inclusive vê apenas a própria carteira no dashboard.
+ * Consolidação global não é um caso de uso desta versão.</p>
  */
 @Service
 @RequiredArgsConstructor
@@ -46,31 +50,16 @@ public class RelatorioService {
     private final FundoRepository fundoRepository;
     private final PosicaoService posicaoService;
     private final FundoResumoMapper fundoResumoMapper;
+    private final UsuarioLogadoSupport usuarioLogado;
 
-    /**
-     * Retorna a renda passiva consolidada por mês de pagamento.
-     *
-     * <p>Os dados são ordenados do mês mais recente para o mais antigo,
-     * facilitando exibição em gráficos e listas no frontend.</p>
-     *
-     * @return lista de {@link RendaMensalResponse}
-     */
     public List<RendaMensalResponse> gerarRendaMensal() {
-        return proventoRepository.agregarRendaMensal().stream()
+        return proventoRepository.agregarRendaMensalPorUsuario(usuarioLogado.getUsuarioIdAtual()).stream()
             .map(this::mapearRendaMensal)
             .toList();
     }
 
-    /**
-     * Retorna a renda passiva consolidada por fundo.
-     *
-     * <p>Carrega todos os fundos referenciados numa única consulta para
-     * evitar problema de N+1.</p>
-     *
-     * @return lista ordenada do maior recebedor ao menor
-     */
     public List<RendaPorFundoResponse> gerarRendaPorFundo() {
-        List<Object[]> linhas = proventoRepository.agregarRendaPorFundo();
+        List<Object[]> linhas = proventoRepository.agregarRendaPorFundoPorUsuario(usuarioLogado.getUsuarioIdAtual());
 
         List<Long> fundoIds = linhas.stream()
             .map(linha -> (Long) linha[0])
@@ -94,16 +83,9 @@ public class RelatorioService {
             .toList();
     }
 
-    /**
-     * Retorna o resumo geral da carteira (totais consolidados).
-     *
-     * <p>Agrega todas as posições dos fundos ativos e todos os proventos
-     * para gerar uma visão única de topo do dashboard.</p>
-     *
-     * @return resumo da carteira
-     */
     public ResumoCarteiraResponse gerarResumoCarteira() {
-        List<Fundo> fundosAtivos = fundoRepository.findByAtivoTrue();
+        Long usuarioId = usuarioLogado.getUsuarioIdAtual();
+        List<Fundo> fundosAtivos = fundoRepository.findByUsuarioIdAndAtivoTrue(usuarioId);
 
         List<PosicaoResponse> posicoes = fundosAtivos.stream()
             .map(f -> posicaoService.calcularPosicaoDoFundo(f.getId()))
@@ -120,7 +102,7 @@ public class RelatorioService {
             .filter(p -> p.quantidadeCotas() > 0)
             .count();
 
-        int mesesComProventos = proventoRepository.agregarRendaMensal().size();
+        int mesesComProventos = proventoRepository.agregarRendaMensalPorUsuario(usuarioId).size();
 
         BigDecimal yield = custoTotal.signum() > 0
             ? totalProventos.multiply(BigDecimal.valueOf(100))
@@ -159,9 +141,6 @@ public class RelatorioService {
         );
     }
 
-    /**
-     * Soma os valores de uma propriedade específica de todas as posições.
-     */
     private BigDecimal somar(List<PosicaoResponse> posicoes,
                              Function<PosicaoResponse, BigDecimal> extrator) {
         return posicoes.stream()
@@ -169,11 +148,6 @@ public class RelatorioService {
             .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /**
-     * Retorna a alocação da carteira por {@link com.renlip.fiis.domain.enumeration.TipoFundo}.
-     *
-     * @return lista de alocações, ordenada do maior custo ao menor
-     */
     public List<AlocacaoResponse> gerarAlocacaoPorTipo() {
         return gerarAlocacao(
             f -> f.getTipo().name(),
@@ -181,11 +155,6 @@ public class RelatorioService {
         );
     }
 
-    /**
-     * Retorna a alocação da carteira por {@link com.renlip.fiis.domain.enumeration.Segmento}.
-     *
-     * @return lista de alocações, ordenada do maior custo ao menor
-     */
     public List<AlocacaoResponse> gerarAlocacaoPorSegmento() {
         return gerarAlocacao(
             f -> f.getSegmento().name(),
@@ -193,17 +162,9 @@ public class RelatorioService {
         );
     }
 
-    /**
-     * Agrupa a carteira por uma categoria derivada do fundo (tipo ou segmento)
-     * e calcula o custo por categoria, o percentual e o número de fundos.
-     *
-     * @param chaveCodigoFn    função para extrair o código da categoria (ex: "LOGISTICA")
-     * @param chaveDescricaoFn função para extrair a descrição (ex: "Logística")
-     * @return lista de alocações
-     */
     private List<AlocacaoResponse> gerarAlocacao(Function<Fundo, String> chaveCodigoFn,
                                                  Function<Fundo, String> chaveDescricaoFn) {
-        List<Fundo> fundos = fundoRepository.findByAtivoTrue();
+        List<Fundo> fundos = fundoRepository.findByUsuarioIdAndAtivoTrue(usuarioLogado.getUsuarioIdAtual());
 
         Map<Long, PosicaoResponse> posicoesPorFundoId = fundos.stream()
             .collect(Collectors.toMap(
@@ -245,10 +206,6 @@ public class RelatorioService {
             .toList();
     }
 
-    /**
-     * Converte uma linha ({@code Object[]}) vinda do agrupamento SQL em
-     * {@link RendaMensalResponse}, capitalizando o nome do mês em português.
-     */
     private RendaMensalResponse mapearRendaMensal(Object[] linha) {
         Integer ano = toInteger(linha[0]);
         Integer mes = toInteger(linha[1]);
@@ -265,19 +222,10 @@ public class RelatorioService {
         );
     }
 
-    /**
-     * Converte o valor retornado pelo banco em {@link Integer}.
-     * O Hibernate pode trazer o resultado de {@code YEAR()/MONTH()} como
-     * Integer, Long ou outro {@link Number} — essa normalização evita
-     * {@link ClassCastException}.
-     */
     private Integer toInteger(Object valor) {
         return ((Number) valor).intValue();
     }
 
-    /**
-     * Converte "abril" em "Abril".
-     */
     private String capitalizar(String texto) {
         if (texto == null || texto.isEmpty()) {
             return texto;

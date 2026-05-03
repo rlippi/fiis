@@ -1,9 +1,9 @@
 -- ============================================
 -- FII-SCRIPT — Massa de dados para testes do OperacaoController
 -- ============================================
--- Executado APÓS o setup.sql (TRUNCATE + RESTART IDENTITY).
+-- Executado APÓS o setup.sql (TRUNCATE + RESTART IDENTITY + usuário de teste ID=1).
 --
--- Insere 2 fundos e 3 operações iniciais cobrindo os cenários:
+-- Insere 2 fundos e 3 operações iniciais (todos do usuário de teste, usuario_id = 1):
 --   Fundos:
 --     ID 1 - HGLG11 (ativo) - usado na maioria dos cenários
 --     ID 2 - MXRF11 (ativo) - sem operações (para testar lista vazia)
@@ -15,14 +15,14 @@
 -- ============================================
 
 INSERT INTO fundo (
-    ticker, nome, cnpj, tipo, segmento, ativo, data_criacao, data_atualizacao
+    usuario_id, ticker, nome, cnpj, tipo, segmento, ativo, data_criacao, data_atualizacao
 ) VALUES
-    ('HGLG11', 'CSHG Logística FII', '11728688000147', 'TIJOLO', 'LOGISTICA',  TRUE, '2026-01-01 10:00:00', '2026-01-01 10:00:00'),
-    ('MXRF11', 'Maxi Renda FII',     '97521225000140', 'PAPEL',  'RECEBIVEIS', TRUE, '2026-01-02 10:00:00', '2026-01-02 10:00:00');
+    (1, 'HGLG11', 'CSHG Logística FII', '11728688000147', 'TIJOLO', 'LOGISTICA',  TRUE, '2026-01-01 10:00:00', '2026-01-01 10:00:00'),
+    (1, 'MXRF11', 'Maxi Renda FII',     '97521225000140', 'PAPEL',  'RECEBIVEIS', TRUE, '2026-01-02 10:00:00', '2026-01-02 10:00:00');
 
 INSERT INTO operacao (
-    fundo_id, tipo, data_operacao, quantidade, preco_unitario, taxas, observacao, data_criacao, data_atualizacao
+    usuario_id, fundo_id, tipo, data_operacao, quantidade, preco_unitario, taxas, observacao, data_criacao, data_atualizacao
 ) VALUES
-    (1, 'COMPRA', '2026-03-15', 10, 150.25, 0.50, 'Primeira compra',  '2026-03-15 10:00:00', '2026-03-15 10:00:00'),
-    (1, 'COMPRA', '2026-03-20',  5, 155.00, 0.50, 'Segunda compra',   '2026-03-20 10:00:00', '2026-03-20 10:00:00'),
-    (1, 'VENDA',  '2026-04-01',  3, 160.00, 0.30, NULL,               '2026-04-01 10:00:00', '2026-04-01 10:00:00');
+    (1, 1, 'COMPRA', '2026-03-15', 10, 150.25, 0.50, 'Primeira compra',  '2026-03-15 10:00:00', '2026-03-15 10:00:00'),
+    (1, 1, 'COMPRA', '2026-03-20',  5, 155.00, 0.50, 'Segunda compra',   '2026-03-20 10:00:00', '2026-03-20 10:00:00'),
+    (1, 1, 'VENDA',  '2026-04-01',  3, 160.00, 0.30, NULL,               '2026-04-01 10:00:00', '2026-04-01 10:00:00');

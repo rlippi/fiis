@@ -3,6 +3,7 @@ package com.renlip.fiis.config.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -28,10 +29,11 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private static final String[] ROTAS_PUBLICAS = {
-        "/auth/**",
+        "/api/auth/**",
         "/swagger-ui/**",
         "/v3/api-docs/**",
         "/actuator/health",
+        "/actuator/info",
         "/error"
     };
 
@@ -69,9 +71,12 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(ROTAS_PUBLICAS).permitAll()
+                .requestMatchers("/api/jobs/**", "/actuator/metrics/**", "/actuator/prometheus")
+                    .hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex

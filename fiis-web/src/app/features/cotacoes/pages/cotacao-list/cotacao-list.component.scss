@@ -1,0 +1,66 @@
+:host {
+  display: block;
+}
+
+.cotacoes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+// Em mobile, "Atualizar carteira" + "Nova cotação" ficam lado a lado
+// dividindo a largura disponível, em vez de empilhados verticalmente
+// (que ocupava muito espaço no card de título).
+@media (max-width: 767px) {
+  .toolbar-actions {
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+  ::ng-deep .toolbar-actions p-button,
+  ::ng-deep .toolbar-actions p-button button {
+    flex: 1;
+    width: 100%;
+  }
+}
+
+.table-caption {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.table-caption input {
+  width: 24rem;
+  max-width: 100%;
+}
+
+.num {
+  text-align: right;
+}
+
+.col-acoes {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.fundo-nome {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--p-text-muted-color);
+}

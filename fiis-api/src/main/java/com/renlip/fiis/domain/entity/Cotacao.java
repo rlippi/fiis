@@ -61,6 +61,14 @@ public class Cotacao {
     private Long id;
 
     /**
+     * Usuário dono desta cotação (carteira isolada por usuário).
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    @Schema(description = "Usuário dono da cotação", accessMode = Schema.AccessMode.READ_ONLY)
+    private Usuario usuario;
+
+    /**
      * Fundo a que a cotação se refere.
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

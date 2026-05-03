@@ -1,0 +1,123 @@
+<section class="evento-form">
+  <p-card>
+    <ng-template #title>{{ titulo() }}</ng-template>
+
+    @if (loading()) {
+      <p class="muted">Carregando...</p>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+        <div class="field span-8">
+          <label for="fundoId">Fundo *</label>
+          <p-select
+            inputId="fundoId"
+            formControlName="fundoId"
+            [options]="fundos()"
+            optionLabel="ticker"
+            optionValue="id"
+            placeholder="Selecione o fundo"
+            [filter]="true"
+            filterBy="ticker,nome"
+            appendTo="body"
+          >
+            <ng-template let-f #selectedItem>
+              <span>{{ f.ticker }} — {{ f.nome }}</span>
+            </ng-template>
+            <ng-template let-f #item>
+              <div class="fundo-option">
+                <strong>{{ f.ticker }}</strong>
+                <span class="fundo-nome">{{ f.nome }}</span>
+              </div>
+            </ng-template>
+          </p-select>
+          @if (form.controls.fundoId.touched && form.controls.fundoId.errors?.['required']) {
+            <small class="error">Fundo é obrigatório.</small>
+          }
+        </div>
+
+        <div class="field span-4">
+          <label for="data">Data *</label>
+          <p-datepicker
+            inputId="data"
+            formControlName="data"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            [maxDate]="hoje"
+            appendTo="body"
+          />
+          @if (form.controls.data.touched && form.controls.data.errors?.['required']) {
+            <small class="error">Data é obrigatória.</small>
+          }
+        </div>
+
+        <div class="field span-6">
+          <label for="tipo">Tipo *</label>
+          <p-select
+            inputId="tipo"
+            formControlName="tipo"
+            [options]="tipos"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecione"
+            appendTo="body"
+          />
+          @if (form.controls.tipo.touched && form.controls.tipo.errors?.['required']) {
+            <small class="error">Tipo é obrigatório.</small>
+          }
+          @if (tipoSelecionado(); as t) {
+            <small class="hint">{{ t.ajuda }}</small>
+          }
+        </div>
+
+        <div class="field span-6">
+          <label for="fator">Fator *</label>
+          <p-inputnumber
+            inputId="fator"
+            formControlName="fator"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="6"
+            [min]="0.000001"
+            placeholder="Ex: 10"
+          />
+          @if (form.controls.fator.touched && form.controls.fator.errors) {
+            <small class="error">
+              @if (form.controls.fator.errors['required']) {
+                Fator é obrigatório.
+              } @else if (form.controls.fator.errors['min']) {
+                Deve ser maior que zero.
+              }
+            </small>
+          }
+        </div>
+
+        <div class="field span-12">
+          <label for="descricao">Descrição</label>
+          <textarea
+            pTextarea
+            id="descricao"
+            formControlName="descricao"
+            rows="2"
+            maxlength="255"
+            placeholder="Opcional (ex: Desdobramento 1:10 aprovado em AGE)"
+          ></textarea>
+        </div>
+
+        <div class="actions span-12">
+          <p-button
+            type="button"
+            label="Cancelar"
+            severity="secondary"
+            [text]="true"
+            [routerLink]="['/eventos']"
+          />
+          <p-button
+            type="submit"
+            label="Salvar"
+            icon="pi pi-check"
+            [loading]="saving()"
+            [disabled]="form.invalid"
+          />
+        </div>
+      </form>
+    }
+  </p-card>
+</section>

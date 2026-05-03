@@ -1,0 +1,108 @@
+@import 'primeicons/primeicons.css';
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+// ============================================
+// Acessibilidade — utilidades globais
+// ============================================
+
+// Skip link "Pular para o conteúdo": fica fora da tela até receber foco
+// (WCAG 2.4.1 — usuários de teclado pulam navegação repetitiva).
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  z-index: 1000;
+  padding: 0.75rem 1.25rem;
+  background-color: var(--p-primary-color);
+  color: var(--p-primary-contrast-color);
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 0 0 0.5rem 0;
+  transition: top 0.2s;
+
+  &:focus,
+  &:focus-visible {
+    top: 0;
+    outline: 2px solid var(--p-primary-contrast-color);
+    outline-offset: -4px;
+  }
+}
+
+// Visualmente escondido mas acessível para leitores de tela.
+// Padrão em projetos com GOV/Bootstrap-acessibilidade — usado em legendas
+// alternativas para gráficos e em ícones decorativos com texto.
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// ============================================
+// Ajustes responsivos globais
+// ============================================
+
+// Listagens (Fundos, Operações, Proventos, Cotações, Eventos):
+// em mobile, o input de busca ocupa a largura toda (sem flex-end),
+// evitando o efeito "grudado na lateral" com width fixo de 24rem.
+@media (max-width: 767px) {
+  .table-caption {
+    justify-content: stretch !important;
+  }
+  .table-caption input {
+    width: 100% !important;
+  }
+}
+
+// Listagens em desktop: o <span class="p-column-title"> existe nos <td>
+// para alimentar o modo stack do PrimeNG em mobile (≤ 959px). Em desktop
+// ele precisa ficar oculto — versões recentes do PrimeNG não escondem
+// mais por default, então forçamos aqui.
+@media (min-width: 960px) {
+  .p-column-title {
+    display: none !important;
+  }
+}
+
+// Listagens em modo stack (PrimeNG ativa abaixo do breakpoint=960px):
+// cada linha vira um "card" empilhado. Sem separação clara, os registros
+// parecem se misturar. Aqui damos borda + sombra + fundo destacado.
+//
+// As variáveis --p-surface-* não invertem automaticamente entre temas
+// (surface-50 é sempre claro, surface-900 é sempre escuro), por isso
+// definimos light/dark explicitamente. A borda esquerda colorida garante
+// contraste em qualquer tema.
+//
+// !important é necessário porque o PrimeNG aplica suas próprias regras
+// (com seletores muito específicos) na linha base; sem ele os defaults
+// vencem por especificidade.
+@media (max-width: 959px) {
+  .p-datatable-tbody > tr {
+    display: block !important;
+    margin-bottom: 1rem !important;
+    border: 1px solid var(--p-surface-300) !important;
+    border-left: 4px solid var(--p-primary-color) !important;
+    border-radius: 0.5rem !important;
+    padding: 0.75rem 1rem !important;
+    background-color: var(--p-surface-50) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+  }
+
+  .app-dark .p-datatable-tbody > tr {
+    border-color: var(--p-surface-700) !important;
+    background-color: var(--p-surface-800) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  }
+}

@@ -2,9 +2,11 @@ package com.renlip.fiis.repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.renlip.fiis.domain.entity.Provento;
@@ -16,46 +18,39 @@ import com.renlip.fiis.domain.entity.Provento;
 public interface ProventoRepository extends JpaRepository<Provento, Long> {
 
     /**
+     * Lista todos os proventos do usuário informado.
+     */
+    List<Provento> findByUsuarioId(Long usuarioId);
+
+    /**
+     * Busca um provento pelo ID garantindo que pertence ao usuário informado.
+     */
+    Optional<Provento> findByIdAndUsuarioId(Long id, Long usuarioId);
+
+    /**
      * Lista os proventos de um fundo, do mais recente ao mais antigo.
-     *
-     * @param fundoId ID do fundo
-     * @return lista de proventos do fundo
      */
     List<Provento> findByFundoIdOrderByDataReferenciaDesc(Long fundoId);
 
     /**
-     * Lista os proventos pagos dentro do intervalo informado (inclusivo).
-     *
-     * <p>Útil para relatórios de renda passiva por período.</p>
-     *
-     * @param inicio data de pagamento inicial (inclusive)
-     * @param fim    data de pagamento final (inclusive)
-     * @return lista de proventos no intervalo
+     * Lista os proventos pagos dentro do intervalo informado (inclusivo), sem filtro
+     * de usuário. Usado em relatórios administrativos.
      */
     List<Provento> findByDataPagamentoBetweenOrderByDataPagamentoDesc(LocalDate inicio, LocalDate fim);
 
     /**
+     * Lista os proventos de um usuário, pagos dentro do intervalo informado (inclusivo).
+     */
+    List<Provento> findByUsuarioIdAndDataPagamentoBetweenOrderByDataPagamentoDesc(
+        Long usuarioId, LocalDate inicio, LocalDate fim);
+
+    /**
      * Verifica se existem proventos vinculados ao fundo.
-     *
-     * @param fundoId ID do fundo
-     * @return {@code true} se houver pelo menos um provento
      */
     boolean existsByFundoId(Long fundoId);
 
     /**
-     * Agrega os proventos por ano/mês (baseado em {@code dataPagamento})
-     * somando o valor total recebido e contando quantos proventos foram pagos.
-     *
-     * <p>Resultado em {@code Object[]}:
-     * <ol>
-     *   <li>{@code [0]} = ano (Integer);</li>
-     *   <li>{@code [1]} = mês (Integer);</li>
-     *   <li>{@code [2]} = soma dos valores (BigDecimal);</li>
-     *   <li>{@code [3]} = quantidade de proventos (Long).</li>
-     * </ol>
-     * </p>
-     *
-     * @return lista ordenada do mês mais recente para o mais antigo
+     * Agrega os proventos (de todos os usuários) por ano/mês — usado por ADMIN.
      */
     @Query("""
         SELECT YEAR(p.dataPagamento),
@@ -69,17 +64,22 @@ public interface ProventoRepository extends JpaRepository<Provento, Long> {
     List<Object[]> agregarRendaMensal();
 
     /**
-     * Agrega os proventos por fundo, somando o total recebido.
-     *
-     * <p>Resultado em {@code Object[]}:
-     * <ol>
-     *   <li>{@code [0]} = ID do fundo (Long);</li>
-     *   <li>{@code [1]} = soma dos valores (BigDecimal);</li>
-     *   <li>{@code [2]} = quantidade de proventos (Long).</li>
-     * </ol>
-     * </p>
-     *
-     * @return lista ordenada do maior recebedor para o menor
+     * Agrega os proventos de um usuário específico por ano/mês.
+     */
+    @Query("""
+        SELECT YEAR(p.dataPagamento),
+               MONTH(p.dataPagamento),
+               SUM(p.valorPorCota * p.quantidadeCotas),
+               COUNT(p)
+        FROM Provento p
+        WHERE p.usuario.id = :usuarioId
+        GROUP BY YEAR(p.dataPagamento), MONTH(p.dataPagamento)
+        ORDER BY YEAR(p.dataPagamento) DESC, MONTH(p.dataPagamento) DESC
+        """)
+    List<Object[]> agregarRendaMensalPorUsuario(@Param("usuarioId") Long usuarioId);
+
+    /**
+     * Agrega os proventos (de todos os usuários) por fundo — usado por ADMIN.
      */
     @Query("""
         SELECT p.fundo.id,
@@ -90,4 +90,18 @@ public interface ProventoRepository extends JpaRepository<Provento, Long> {
         ORDER BY SUM(p.valorPorCota * p.quantidadeCotas) DESC
         """)
     List<Object[]> agregarRendaPorFundo();
+
+    /**
+     * Agrega os proventos de um usuário específico por fundo.
+     */
+    @Query("""
+        SELECT p.fundo.id,
+               SUM(p.valorPorCota * p.quantidadeCotas),
+               COUNT(p)
+        FROM Provento p
+        WHERE p.usuario.id = :usuarioId
+        GROUP BY p.fundo.id
+        ORDER BY SUM(p.valorPorCota * p.quantidadeCotas) DESC
+        """)
+    List<Object[]> agregarRendaPorFundoPorUsuario(@Param("usuarioId") Long usuarioId);
 }

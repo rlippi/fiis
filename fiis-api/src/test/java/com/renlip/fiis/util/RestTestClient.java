@@ -3,13 +3,17 @@ package com.renlip.fiis.util;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -186,11 +190,85 @@ public class RestTestClient {
         }
 
         /**
+         * Inicia a validação de uma resposta binária (ex: PDF, XLSX, ZIP).
+         *
+         * <p>Diferente do overload de JSON, não compara contra um arquivo
+         * fixture — devolve um {@link BinaryResponseSpec} para que o teste
+         * consuma os bytes e os headers via {@code consumeWith(...)}.</p>
+         *
+         * @param bytesClass marcador de tipo (passe {@code byte[].class})
+         */
+        public BinaryResponseSpec expectBody(Class<byte[]> bytesClass) {
+            return new BinaryResponseSpec(result);
+        }
+
+        /**
          * Expõe o {@link MvcResult} bruto caso o teste precise de uma
          * validação customizada (ex: inspecionar headers específicos).
          */
         public MvcResult getResult() {
             return result;
+        }
+    }
+
+    // -------------------------------------------------------------------
+    // Asserções sobre respostas binárias (PDF, XLSX, etc.)
+    // -------------------------------------------------------------------
+
+    /**
+     * Spec dedicada a validar respostas binárias. O teste consome os bytes
+     * e os headers através de um {@link Consumer} que recebe um
+     * {@link BinaryResponse}.
+     */
+    public static class BinaryResponseSpec {
+
+        private final MvcResult result;
+
+        private BinaryResponseSpec(MvcResult result) {
+            this.result = result;
+        }
+
+        public BinaryResponseSpec consumeWith(Consumer<BinaryResponse> consumer) {
+            consumer.accept(new BinaryResponse(result));
+            return this;
+        }
+
+        public MvcResult getResult() {
+            return result;
+        }
+    }
+
+    /**
+     * Wrapper de leitura sobre o {@link MvcResult} oferecendo a mesma
+     * superfície de uso do {@code WebTestClient.ResponseSpec} para respostas
+     * binárias: {@link #getResponseHeaders()} e {@link #getResponseBody()}.
+     */
+    public static class BinaryResponse {
+
+        private final MvcResult result;
+
+        private BinaryResponse(MvcResult result) {
+            this.result = result;
+        }
+
+        public HttpHeaders getResponseHeaders() {
+            MockHttpServletResponse response = result.getResponse();
+            HttpHeaders headers = new HttpHeaders();
+            Collection<String> names = response.getHeaderNames();
+            for (String name : names) {
+                for (String value : response.getHeaders(name)) {
+                    headers.add(name, value);
+                }
+            }
+            String contentType = response.getContentType();
+            if (contentType != null && headers.getContentType() == null) {
+                headers.setContentType(MediaType.parseMediaType(contentType));
+            }
+            return headers;
+        }
+
+        public byte[] getResponseBody() {
+            return result.getResponse().getContentAsByteArray();
         }
     }
 }

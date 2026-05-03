@@ -10,6 +10,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.renlip.fiis.domain.enumeration.MensagemEnum;
 
@@ -66,6 +67,26 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Trata {@link LimiteRequisicoesException} → HTTP 429 (Too Many Requests).
+     *
+     * <p>Disparada pelo {@code RateLimitSupport} quando o bucket do cliente
+     * está vazio. A mensagem é propositalmente genérica para não vazar
+     * detalhes do mecanismo de rate limiting.</p>
+     */
+    @ExceptionHandler(LimiteRequisicoesException.class)
+    public ResponseEntity<ErroResponse> handleRateLimit(
+            LimiteRequisicoesException ex, HttpServletRequest request) {
+        ErroResponse body = ErroResponse.of(
+            HttpStatus.TOO_MANY_REQUESTS.value(),
+            "Too Many Requests",
+            ex.getMensagem().getCodigo(),
+            resolver(ex.getMensagem(), ex.getArgs()),
+            request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(body);
+    }
+
+    /**
      * Trata erros de validação do Bean Validation → HTTP 400 (Bad Request).
      *
      * <p>Consolida todas as mensagens de erro (um campo pode ter múltiplas)
@@ -107,6 +128,28 @@ public class GlobalExceptionHandler {
             request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+
+    /**
+     * Trata requests para rotas inexistentes → HTTP 404.
+     *
+     * <p>Por default o Spring Boot devolve uma resposta 404 genérica do {@code BasicErrorController}.
+     * Com {@code spring.mvc.throw-exception-if-no-handler-found=true} e
+     * {@code spring.web.resources.add-mappings=false} configurados, o DispatcherServlet passa a
+     * lançar {@link NoHandlerFoundException} que é capturada aqui — assim o cliente recebe o mesmo
+     * formato {@link ErroResponse} dos outros erros, em vez de HTML ou 500.</p>
+     */
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ErroResponse> handleNoHandler(
+            NoHandlerFoundException ex, HttpServletRequest request) {
+        ErroResponse body = ErroResponse.of(
+            HttpStatus.NOT_FOUND.value(),
+            "Not Found",
+            MensagemEnum.ROTA_NAO_ENCONTRADA.getCodigo(),
+            resolver(MensagemEnum.ROTA_NAO_ENCONTRADA),
+            request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
     /**

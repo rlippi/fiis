@@ -1,0 +1,7 @@
+{
+    "status": 409,
+    "erro": "Conflict",
+    "codigo": "FII0023",
+    "mensagem": "Token de redefinição de senha inválido ou expirado",
+    "path": "/api/auth/reset-password"
+}

@@ -13,11 +13,9 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      # TODO: voltar para "validate" quando o Flyway entrar (FASE 6.1).
-      # Por enquanto usamos "update" em PROD para que o Hibernate crie/atualize
-      # o schema no primeiro deploy — sem isso, a aplicação não sobe em um banco
-      # vazio (validate exige schema pré-existente).
-      ddl-auto: update
+      # "validate" apenas confere se o schema do banco bate com as @Entity;
+      # quem cria/altera tabelas é o Flyway (ver application.yml).
+      ddl-auto: validate
     show-sql: false
 
 logging:

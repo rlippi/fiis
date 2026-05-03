@@ -1,6 +1,7 @@
 package com.renlip.fiis.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import com.renlip.fiis.domain.vo.EventoCorporativoRequest;
 import com.renlip.fiis.exception.RecursoNaoEncontradoException;
 import com.renlip.fiis.repository.EventoCorporativoRepository;
 import com.renlip.fiis.repository.FundoRepository;
+import com.renlip.fiis.support.UsuarioLogadoSupport;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,13 +24,15 @@ import lombok.RequiredArgsConstructor;
  *
  * <p>Principais validações:
  * <ul>
- *   <li>Fundo referenciado deve existir;</li>
+ *   <li>Fundo referenciado deve pertencer ao usuário autenticado;</li>
  *   <li>Fator deve ser positivo (garantido no Bean Validation).</li>
  * </ul>
  * </p>
  *
  * <p><b>Nota:</b> o efeito do evento na posição do investidor é aplicado
  * dinamicamente pelo {@link PosicaoService} ao calcular a posição atual.</p>
+ *
+ * <p><b>Multi-usuário:</b> USER vê apenas seus eventos; ADMIN tem acesso global.</p>
  */
 @Service
 @RequiredArgsConstructor
@@ -38,51 +42,30 @@ public class EventoCorporativoService {
     private final EventoCorporativoRepository eventoRepository;
     private final FundoRepository fundoRepository;
     private final EventoCorporativoMapper eventoMapper;
+    private final UsuarioLogadoSupport usuarioLogado;
 
-    /**
-     * Lista todos os eventos corporativos cadastrados.
-     *
-     * @return lista completa
-     */
     public List<EventoCorporativoResponse> listarTodos() {
-        return eventoMapper.toResponseList(eventoRepository.findAll());
+        List<EventoCorporativo> eventos = usuarioLogado.isAdmin()
+            ? eventoRepository.findAll()
+            : eventoRepository.findByUsuarioId(usuarioLogado.getUsuarioIdAtual());
+        return eventoMapper.toResponseList(eventos);
     }
 
-    /**
-     * Lista os eventos corporativos de um fundo específico (mais recente primeiro).
-     *
-     * @param fundoId ID do fundo
-     * @return lista de eventos
-     * @throws RecursoNaoEncontradoException se o fundo não existir
-     */
     public List<EventoCorporativoResponse> listarPorFundo(Long fundoId) {
-        validarFundoExiste(fundoId);
+        obterFundoDoUsuario(fundoId);
         return eventoMapper.toResponseList(eventoRepository.findByFundoIdOrderByDataDesc(fundoId));
     }
 
-    /**
-     * Busca um evento pelo ID.
-     *
-     * @param id identificador
-     * @return evento encontrado
-     * @throws RecursoNaoEncontradoException se não existir
-     */
     public EventoCorporativoResponse buscarPorId(Long id) {
         return eventoMapper.toResponse(obterEntidade(id));
     }
 
-    /**
-     * Cria um novo evento corporativo.
-     *
-     * @param request dados do evento
-     * @return evento criado
-     * @throws RecursoNaoEncontradoException se o fundo não existir
-     */
     @Transactional
     public EventoCorporativoResponse criar(EventoCorporativoRequest request) {
-        Fundo fundo = obterFundo(request.fundoId());
+        Fundo fundo = obterFundoDoUsuario(request.fundoId());
 
         EventoCorporativo evento = EventoCorporativo.builder()
+            .usuario(fundo.getUsuario())
             .fundo(fundo)
             .tipo(request.tipo())
             .data(request.data())
@@ -94,19 +77,12 @@ public class EventoCorporativoService {
         return eventoMapper.toResponse(salvo);
     }
 
-    /**
-     * Atualiza um evento corporativo existente.
-     *
-     * @param id      identificador
-     * @param request novos dados
-     * @return evento atualizado
-     * @throws RecursoNaoEncontradoException se o evento ou fundo não existirem
-     */
     @Transactional
     public EventoCorporativoResponse atualizar(Long id, EventoCorporativoRequest request) {
         EventoCorporativo evento = obterEntidade(id);
-        Fundo fundo = obterFundo(request.fundoId());
+        Fundo fundo = obterFundoDoUsuario(request.fundoId());
 
+        evento.setUsuario(fundo.getUsuario());
         evento.setFundo(fundo);
         evento.setTipo(request.tipo());
         evento.setData(request.data());
@@ -117,12 +93,6 @@ public class EventoCorporativoService {
         return eventoMapper.toResponse(atualizado);
     }
 
-    /**
-     * Remove um evento corporativo (hard delete).
-     *
-     * @param id identificador
-     * @throws RecursoNaoEncontradoException se não existir
-     */
     @Transactional
     public void deletar(Long id) {
         EventoCorporativo evento = obterEntidade(id);
@@ -130,18 +100,20 @@ public class EventoCorporativoService {
     }
 
     private EventoCorporativo obterEntidade(Long id) {
-        return eventoRepository.findById(id)
-            .orElseThrow(() -> new RecursoNaoEncontradoException(MensagemEnum.EVENTO_CORPORATIVO_NAO_ENCONTRADO, id));
+        Optional<EventoCorporativo> evento = usuarioLogado.isAdmin()
+            ? eventoRepository.findById(id)
+            : eventoRepository.findByIdAndUsuarioId(id, usuarioLogado.getUsuarioIdAtual());
+
+        return evento.orElseThrow(() ->
+            new RecursoNaoEncontradoException(MensagemEnum.EVENTO_CORPORATIVO_NAO_ENCONTRADO, id));
     }
 
-    private Fundo obterFundo(Long fundoId) {
-        return fundoRepository.findById(fundoId)
-            .orElseThrow(() -> new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId));
-    }
+    private Fundo obterFundoDoUsuario(Long fundoId) {
+        Optional<Fundo> fundo = usuarioLogado.isAdmin()
+            ? fundoRepository.findById(fundoId)
+            : fundoRepository.findByIdAndUsuarioId(fundoId, usuarioLogado.getUsuarioIdAtual());
 
-    private void validarFundoExiste(Long fundoId) {
-        if (!fundoRepository.existsById(fundoId)) {
-            throw new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId);
-        }
+        return fundo.orElseThrow(() ->
+            new RecursoNaoEncontradoException(MensagemEnum.FUNDO_NAO_ENCONTRADO, fundoId));
     }
 }

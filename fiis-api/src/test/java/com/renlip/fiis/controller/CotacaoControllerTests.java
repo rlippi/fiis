@@ -1,17 +1,27 @@
 package com.renlip.fiis.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
 
+import com.renlip.fiis.domain.dto.brapi.BrapiQuote;
+import com.renlip.fiis.domain.dto.brapi.BrapiQuoteResponse;
+import com.renlip.fiis.support.BrapiClient;
 import com.renlip.fiis.util.JsonUtils;
 
 /**
@@ -30,6 +40,9 @@ import com.renlip.fiis.util.JsonUtils;
     @Sql(value = "/fixtures/cotacoes/fii-script.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
 })
 class CotacaoControllerTests extends AbstractControllerTests {
+
+    @MockBean
+    private BrapiClient brapiClient;
 
     @Nested
     @DisplayName("GET /api/cotacoes")
@@ -212,6 +225,71 @@ class CotacaoControllerTests extends AbstractControllerTests {
                 restTestClient.put("/api/cotacoes/{id}", body, 1L)
                     .expectStatus(HttpStatus.OK)
                     .expectBody("scenarios/cotacoes/success/06-atualizar/expected.json");
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/cotacoes/importar-brapi")
+    class ImportarBrapi {
+
+        @Nested
+        @DisplayName("[2xx Success]")
+        class ImportarBrapiSuccess {
+
+            @Test
+            @DisplayName("[200 OK] Importa cotações da BRAPI e marca ticker ausente")
+            void testImportarComTickerAusente() {
+                // A fixture tem 3 fundos ativos (HGLG11, MXRF11, VISC11).
+                // BRAPI retorna apenas HGLG11 e VISC11 — MXRF11 deve vir em
+                // naoEncontradosBrapi.
+                BrapiQuoteResponse resposta = new BrapiQuoteResponse(List.of(
+                    new BrapiQuote(
+                        "HGLG11",
+                        new BigDecimal("160.25"),
+                        new BigDecimal("158.90"),
+                        new BigDecimal("158.00"),
+                        new BigDecimal("161.50"),
+                        new BigDecimal("1250000.00")),
+                    new BrapiQuote(
+                        "VISC11",
+                        new BigDecimal("11.40"),
+                        new BigDecimal("11.20"),
+                        new BigDecimal("11.10"),
+                        new BigDecimal("11.55"),
+                        new BigDecimal("800000.00"))
+                ));
+                when(brapiClient.buscarCotacoes(any())).thenReturn(resposta);
+
+                restTestClient.post("/api/cotacoes/importar-brapi", "")
+                    .expectStatus(HttpStatus.OK)
+                    .expectBody("scenarios/cotacoes/success/09-importar-brapi/expected.json");
+            }
+        }
+
+        @Nested
+        @DisplayName("[4xx Failure]")
+        class ImportarBrapiFailure {
+
+            @Test
+            @DisplayName("[409 Conflict] BRAPI indisponível (RestClientException)")
+            void testBrapiIndisponivel() {
+                when(brapiClient.buscarCotacoes(any()))
+                    .thenThrow(new RestClientException("boom"));
+
+                restTestClient.post("/api/cotacoes/importar-brapi", "")
+                    .expectStatus(HttpStatus.CONFLICT)
+                    .expectBody("scenarios/cotacoes/failure/09-importar-brapi-indisponivel/expected.json");
+            }
+
+            @Test
+            @DisplayName("[409 Conflict] Nenhum fundo ativo na carteira")
+            @Sql(value = "/fixtures/cotacoes/desativar-todos-fundos.sql",
+                 executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
+            void testCarteiraVazia() {
+                restTestClient.post("/api/cotacoes/importar-brapi", "")
+                    .expectStatus(HttpStatus.CONFLICT)
+                    .expectBody("scenarios/cotacoes/failure/10-importar-brapi-carteira-vazia/expected.json");
             }
         }
     }
