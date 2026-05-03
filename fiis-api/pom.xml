@@ -15,7 +15,7 @@
     <!-- Identificação do nosso projeto -->
     <groupId>com.renlip</groupId>
     <artifactId>fiis-api</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>2.0.0</version>
     <name>fiis-api</name>
     <description>Gerenciador de Carteira de FIIs</description>
 
