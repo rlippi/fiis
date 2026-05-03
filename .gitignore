@@ -124,3 +124,8 @@ Anotacoes.md
 # Guias pessoais de setup (caminho local, instruções específicas)
 # ==============================================
 GUIA-NOVA-MAQUINA.md
+
+# ==============================================
+# Relatórios gerados sob demanda (Lighthouse, etc.)
+# ==============================================
+docs/lighthouse/

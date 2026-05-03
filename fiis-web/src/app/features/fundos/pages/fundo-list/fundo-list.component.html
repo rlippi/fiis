@@ -37,6 +37,7 @@
             pInputText
             type="text"
             placeholder="Buscar por ticker, nome, CNPJ..."
+            aria-label="Buscar por ticker, nome ou CNPJ"
             [(ngModel)]="globalFilter"
             (input)="dt.filterGlobal(globalFilter(), 'contains')"
           />
